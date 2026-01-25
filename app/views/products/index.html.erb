@@ -6,6 +6,12 @@
         <h2 class="text-xl font-bold text-gray-900 mb-6">Шүүлт</h2>
         
         <%= form_with url: products_path, method: :get, data: { turbo: false } do |f| %>
+          <!-- Hidden Fields for maintaining state across filters -->
+          <%= hidden_field_tag :category_id, params[:category_id] %>
+          <%= hidden_field_tag :parent_category_id, params[:parent_category_id] %>
+          <%= hidden_field_tag :q, params[:q] %>
+          <%= hidden_field_tag :sort, params[:sort] %>
+          
           <!-- Category Filter -->
           <div class="mb-6">
             <h3 class="font-semibold text-gray-900 mb-3">Ангилал</h3>
@@ -41,13 +47,6 @@
           <div class="mb-6">
             <h3 class="font-semibold text-gray-900 mb-3">Брэнд</h3>
             <div class="space-y-2">
-              <%= hidden_field_tag :category_id, params[:category_id] %>
-              <%= hidden_field_tag :parent_category_id, params[:parent_category_id] %>
-              <%= hidden_field_tag :discount, params[:discount] %>
-              <%= hidden_field_tag :min_price, params[:min_price] %>
-              <%= hidden_field_tag :max_price, params[:max_price] %>
-              <%= hidden_field_tag :q, params[:q] %>
-              <%= hidden_field_tag :sort, params[:sort] %>
               <label class="flex items-center">
                 <%= radio_button_tag :brand_id, "", params[:brand_id].blank?, 
                   class: "w-4 h-4 text-[#0053E2] focus:ring-[#0053E2]",
@@ -68,13 +67,6 @@
           <!-- Discount Filter -->
           <div class="mb-6">
             <h3 class="font-semibold text-gray-900 mb-3">Хямдралтай</h3>
-            <%= hidden_field_tag :category_id, params[:category_id] %>
-            <%= hidden_field_tag :parent_category_id, params[:parent_category_id] %>
-            <%= hidden_field_tag :brand_id, params[:brand_id] %>
-            <%= hidden_field_tag :min_price, params[:min_price] %>
-            <%= hidden_field_tag :max_price, params[:max_price] %>
-            <%= hidden_field_tag :q, params[:q] %>
-            <%= hidden_field_tag :sort, params[:sort] %>
             <label class="flex items-center">
               <%= check_box_tag :discount, "1", params[:discount] == "1", 
                 class: "w-4 h-4 text-[#0053E2] rounded focus:ring-[#0053E2]",
@@ -87,12 +79,6 @@
           <div class="mb-6">
             <h3 class="font-semibold text-gray-900 mb-3">Үнийн хязгаар</h3>
             <div class="space-y-3">
-              <%= hidden_field_tag :category_id, params[:category_id] %>
-              <%= hidden_field_tag :parent_category_id, params[:parent_category_id] %>
-              <%= hidden_field_tag :brand_id, params[:brand_id] %>
-              <%= hidden_field_tag :discount, params[:discount] %>
-              <%= hidden_field_tag :q, params[:q] %>
-              <%= hidden_field_tag :sort, params[:sort] %>
               <div>
                 <%= f.number_field :min_price, 
                   value: params[:min_price],

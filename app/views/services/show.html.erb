@@ -1,118 +1,414 @@
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <!-- Breadcrumbs -->
-  <nav class="mb-6" aria-label="Breadcrumb">
-    <ol class="flex items-center space-x-2 text-sm text-gray-600">
-      <li><%= link_to "Services", services_path, class: "hover:text-toffee-brown-600" %></li>
-      <% if @service.category %>
-        <li><span class="mx-2">/</span></li>
-        <li class="text-gray-900"><%= @service.category.name %></li>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Breadcrumb -->
+  <div class="mb-6 text-sm text-gray-500">
+    <%= link_to "Үйлчилгээ", services_path, class: "hover:text-[#0053E2]" %>
+    <% if @service.category %>
+      <% 
+        # Build category hierarchy
+        categories = []
+        current = @service.category
+        while current
+          categories.unshift(current)
+          current = current.parent
+        end
+      %>
+      <% categories.each do |cat| %>
+        > <%= link_to cat.name, services_path(category_id: cat.id), class: "hover:text-[#0053E2]" %>
       <% end %>
-    </ol>
-  </nav>
+    <% end %>
+    > <span class="text-gray-900"><%= @sellable.name %></span>
+  </div>
 
-  <!-- Service Details -->
-  <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-    <div class="p-8">
-      <!-- Header -->
-      <div class="mb-6">
-        <div class="flex items-start justify-between">
-          <div class="flex-1">
-            <h1 class="text-3xl font-bold text-gray-900 mb-2"><%= @sellable.name %></h1>
-            
-            <!-- Badges -->
-            <div class="flex flex-wrap gap-2 mb-4">
-              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <%= @service.service_type == 'subscription' ? 'bg-purple-100 text-purple-800' : @service.service_type == 'hourly' ? 'bg-toffee-brown-100 text-toffee-brown-800' : 'bg-green-100 text-green-800' %>">
-                <%= @service.service_type.titleize %> Service
+  <div class="flex gap-8">
+    <!-- Service Icon/Placeholder -->
+    <div class="flex-shrink-0 w-96">
+      <div class="bg-white rounded-lg p-8 shadow-sm">
+        <div class="relative">
+          <% 
+            service_type_colors = {
+              'hourly' => '#10B981',
+              'fixed' => '#3B82F6', 
+              'subscription' => '#8B5CF6'
+            }
+            service_color = service_type_colors[@service.service_type] || '#6B7280'
+          %>
+          
+          <div class="absolute top-0 left-0 bg-[<%= service_color %>] rounded-lg px-3 py-1">
+            <span class="text-white text-xs font-semibold"><%= @service.service_type.titleize %></span>
+          </div>
+          
+          <!-- Service Icon SVG -->
+          <svg class="w-full" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="400" fill="#F3F4F6"/>
+            <!-- Service Icon -->
+            <circle cx="200" cy="150" r="40" fill="<%= service_color %>" opacity="0.3"/>
+            <path d="M200 130C189.507 130 181 138.507 181 149C181 159.493 189.507 168 200 168C210.493 168 219 159.493 219 149C219 138.507 210.493 130 200 130Z" fill="<%= service_color %>"/>
+            <path d="M200 180C176.804 180 158 198.804 158 222V240C158 243.314 160.686 246 164 246H236C239.314 246 242 243.314 242 240V222C242 198.804 223.196 180 200 180Z" fill="<%= service_color %>"/>
+            <!-- Decorative elements -->
+            <circle cx="140" cy="280" r="8" fill="<%= service_color %>" opacity="0.2"/>
+            <circle cx="260" cy="280" r="8" fill="<%= service_color %>" opacity="0.2"/>
+            <circle cx="200" cy="300" r="12" fill="<%= service_color %>" opacity="0.3"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Service Details -->
+    <div class="flex-1">
+      <div class="bg-gray-50 rounded-lg p-6">
+        <h1 class="text-2xl font-bold text-gray-900 mb-4">
+          <%= @sellable.name %>
+        </h1>
+
+        <!-- Service Type Badge -->
+        <div class="mb-6">
+          <div class="flex flex-wrap gap-2">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <%= @service.service_type == 'subscription' ? 'bg-purple-100 text-purple-800' : @service.service_type == 'hourly' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800' %>">
+              <%= @service.service_type == 'hourly' ? 'Цагаар' : @service.service_type == 'subscription' ? 'Захиалгат' : 'Тогтмол үнэтэй' %>
+            </span>
+            <% if @service.requires_schedule %>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                Цаг товлох шаардлагатай
               </span>
-              <% if @service.requires_schedule %>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
-                  Scheduling Required
-                </span>
-              <% end %>
-              <% if @sellable.is_active %>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                  Available
-                </span>
-              <% else %>
-                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-                  Unavailable
-                </span>
-              <% end %>
-            </div>
-
-            <!-- Category -->
-            <% if @service.category %>
-              <p class="text-gray-600 mb-4">
-                <span class="font-medium">Category:</span> <%= @service.category.full_path %>
-              </p>
             <% end %>
-          </div>
-
-          <!-- Price -->
-          <div class="ml-6 text-right">
-            <div class="text-3xl font-bold text-gray-900">
-              <%= number_to_currency(@sellable.base_price, unit: "$") %>
-            </div>
-            <% if @service.service_type == 'hourly' %>
-              <div class="text-sm text-gray-600">per hour</div>
-            <% elsif @service.service_type == 'subscription' %>
-              <div class="text-sm text-gray-600">per month</div>
+            <% if @sellable.is_active %>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                Идэвхтэй
+              </span>
+            <% else %>
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                Идэвхгүй
+              </span>
             <% end %>
           </div>
         </div>
-      </div>
 
-      <!-- Description -->
-      <% if @sellable.description.present? %>
-        <div class="prose max-w-none mb-8">
-          <h2 class="text-xl font-semibold text-gray-900 mb-3">Description</h2>
-          <p class="text-gray-700 leading-relaxed"><%= @sellable.description %></p>
-        </div>
-      <% end %>
-
-      <!-- Service Details -->
-      <div class="border-t border-gray-200 pt-6 mb-8">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">Service Information</h2>
-        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <dt class="text-sm font-medium text-gray-600">Service Type</dt>
-            <dd class="mt-1 text-sm text-gray-900"><%= @service.service_type.titleize %></dd>
-          </div>
-          <div>
-            <dt class="text-sm font-medium text-gray-600">Scheduling</dt>
-            <dd class="mt-1 text-sm text-gray-900">
-              <%= @service.requires_schedule ? "Appointment Required" : "No Appointment Needed" %>
-            </dd>
-          </div>
-          <% if @service.category %>
-            <div>
-              <dt class="text-sm font-medium text-gray-600">Category</dt>
-              <dd class="mt-1 text-sm text-gray-900"><%= @service.category.name %></dd>
-            </div>
-          <% end %>
-          <div>
-            <dt class="text-sm font-medium text-gray-600">Base Price</dt>
-            <dd class="mt-1 text-sm text-gray-900">
-              <%= number_to_currency(@sellable.base_price, unit: "$") %>
-              <% if @service.service_type == 'hourly' %>
-                / hour
-              <% elsif @service.service_type == 'subscription' %>
-                / month
+        <!-- Configuration Options -->
+        <% if @service.service_config_specs.any? %>
+          <div class="mb-6">
+            <h3 class="font-semibold text-gray-900 mb-3">Тохиргоо</h3>
+            <div class="space-y-4" id="service-config-container">
+              <% @service.service_config_specs.each do |spec| %>
+                <div class="bg-white rounded-lg border border-gray-200 p-4" data-config-spec="<%= spec.id %>">
+                  <label class="block mb-3">
+                    <span class="text-sm font-medium text-gray-900"><%= spec.field_name %></span>
+                    <% if spec.description.present? %>
+                      <span class="text-xs text-gray-500 block mt-1"><%= spec.description %></span>
+                    <% end %>
+                  </label>
+                  
+                  <% if spec.has_options? %>
+                    <!-- Options as buttons (like product variants) -->
+                    <div class="flex flex-wrap gap-3">
+                      <% spec.options.each do |option| %>
+                        <% 
+                          option_value = option.is_a?(Hash) ? option['value'] : option
+                          option_price = option.is_a?(Hash) ? option['price'] : spec.unit_price
+                        %>
+                        <button type="button" 
+                          data-config-spec-id="<%= spec.id %>"
+                          data-option-value="<%= option_value %>"
+                          data-unit-price="<%= option_price %>"
+                          class="config-option px-4 py-2 border-2 border-gray-300 rounded-button text-sm font-semibold text-gray-700 hover:border-[#0053E2] hover:bg-blue-50 transition-colors focus:border-[#0053E2] focus:bg-blue-50">
+                          <%= option_value %>
+                          <% if option_price.to_f > 0 %>
+                            <span class="text-xs text-gray-500 block">+<%= number_to_currency(option_price, unit: "₮", precision: 0, format: "%n%u") %></span>
+                          <% end %>
+                        </button>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <!-- Input field -->
+                    <% case spec.data_type %>
+                    <% when 'string', 'text' %>
+                      <%= text_field_tag "config[#{spec.id}]", nil, 
+                        class: "w-full rounded-lg border-gray-300 text-sm focus:border-[#0053E2] focus:ring-[#0053E2]",
+                        placeholder: spec.field_name,
+                        data: { config_spec_id: spec.id, unit_price: spec.unit_price } %>
+                    <% when 'int', 'number', 'integer' %>
+                      <%= number_field_tag "config[#{spec.id}]", nil,
+                        class: "w-full rounded-lg border-gray-300 text-sm focus:border-[#0053E2] focus:ring-[#0053E2]",
+                        placeholder: spec.field_name,
+                        data: { config_spec_id: spec.id, unit_price: spec.unit_price } %>
+                    <% when 'date' %>
+                      <%= date_field_tag "config[#{spec.id}]", nil,
+                        class: "w-full rounded-lg border-gray-300 text-sm focus:border-[#0053E2] focus:ring-[#0053E2]",
+                        data: { config_spec_id: spec.id, unit_price: spec.unit_price } %>
+                    <% when 'datetime' %>
+                      <%= datetime_local_field_tag "config[#{spec.id}]", nil,
+                        class: "w-full rounded-lg border-gray-300 text-sm focus:border-[#0053E2] focus:ring-[#0053E2]",
+                        data: { config_spec_id: spec.id, unit_price: spec.unit_price } %>
+                    <% when 'bool', 'boolean' %>
+                      <label class="flex items-center">
+                        <%= check_box_tag "config[#{spec.id}]", "true", false,
+                          class: "w-4 h-4 text-[#0053E2] rounded focus:ring-[#0053E2]",
+                          data: { config_spec_id: spec.id, unit_price: spec.unit_price } %>
+                        <span class="ml-2 text-sm text-gray-700">Идэвхжүүлэх</span>
+                      </label>
+                    <% end %>
+                    
+                    <% if spec.unit_price > 0 %>
+                      <div class="mt-2 text-xs text-gray-600">
+                        Нэмэлт үнэ: <%= number_to_currency(spec.unit_price, unit: "₮", precision: 0, format: "%n%u") %>
+                      </div>
+                    <% end %>
+                  <% end %>
+                </div>
               <% end %>
-            </dd>
+            </div>
           </div>
-        </dl>
-      </div>
-
-      <!-- Actions -->
-      <div class="flex gap-4">
-        <%= link_to "Back to Services", services_path, class: "inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-toffee-brown-500" %>
-        <% if @sellable.is_active %>
-          <button type="button" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-toffee-brown-600 hover:bg-toffee-brown-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-toffee-brown-500">
-            Request Service
-          </button>
         <% end %>
+
+        <!-- Service Information -->
+        <div class="mb-6">
+          <h3 class="font-semibold text-gray-900 mb-3">Мэдээлэл</h3>
+          <div class="bg-white rounded-lg border border-gray-200">
+            <ul class="divide-y divide-gray-200">
+              <li class="flex items-center justify-between px-4 py-3">
+                <span class="text-sm text-gray-600 font-medium">Төрөл</span>
+                <span class="text-sm text-gray-900">
+                  <%= @service.service_type == 'hourly' ? 'Цагаар' : @service.service_type == 'subscription' ? 'Захиалгат' : 'Тогтмол үнэтэй' %>
+                </span>
+              </li>
+              <% if @service.category %>
+                <li class="flex items-center justify-between px-4 py-3">
+                  <span class="text-sm text-gray-600 font-medium">Ангилал</span>
+                  <span class="text-sm text-gray-900"><%= @service.category.name %></span>
+                </li>
+              <% end %>
+              <li class="flex items-center justify-between px-4 py-3">
+                <span class="text-sm text-gray-600 font-medium">Цаг товлох</span>
+                <span class="text-sm text-gray-900">
+                  <%= @service.requires_schedule ? 'Шаардлагатай' : 'Шаардлагагүй' %>
+                </span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <% if @sellable.description.present? %>
+          <div>
+            <h3 class="font-semibold text-gray-900 mb-3">Дэлгэрэнгүй</h3>
+            <p class="text-sm text-gray-700 leading-relaxed">
+              <%= @sellable.description %>
+            </p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Price & Add to Cart -->
+    <div class="flex-shrink-0 w-80">
+      <div class="bg-white rounded-lg p-6 shadow-sm sticky top-4">
+        <!-- Price -->
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-gray-600">Үндсэн үнэ</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span id="base-price" class="text-3xl font-bold text-gray-900" data-base-price="<%= @sellable.base_price %>">
+              <%= number_to_currency(@sellable.base_price, unit: "₮", precision: 0, format: "%n%u") %>
+            </span>
+            <% if @service.service_type == 'hourly' %>
+              <span class="text-sm text-gray-600">/цаг</span>
+            <% elsif @service.service_type == 'subscription' %>
+              <span class="text-sm text-gray-600">/сар</span>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Quantity Selector (for fixed/hourly services) -->
+        <% if @service.service_type != 'subscription' %>
+          <div class="mb-6">
+            <label class="text-sm text-gray-600 mb-3 block">
+              <%= @service.service_type == 'hourly' ? 'Цагийн тоо' : 'Тоо ширхэг' %>
+            </label>
+            <div class="flex items-center justify-center gap-4">
+              <button type="button" id="decrease-qty" class="w-12 h-12 rounded-full flex items-center justify-center transition-all bg-[#0053E2] hover:bg-[#003299] active:bg-[#001E60]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M13.5 6.5C13.7761 6.5 14 6.72386 14 7C14 7.27614 13.7761 7.5 13.5 7.5H0.5C0.223858 7.5 0 7.27614 0 7C0 6.72386 0.223858 6.5 0.5 6.5H13.5Z" fill="white"/>
+                </svg>
+              </button>
+              
+              <span id="quantity" class="text-4xl font-bold text-gray-900 w-16 text-center">1</span>
+              
+              <button type="button" id="increase-qty" class="w-12 h-12 rounded-full flex items-center justify-center transition-all bg-[#0053E2] hover:bg-[#003299] active:bg-[#001E60]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none">
+                  <path d="M7.5 0C7.79587 0 8.03571 0.239847 8.03571 0.535714V6.96429H14.4643C14.7602 6.96429 15 7.20413 15 7.5C14.9999 7.79578 14.7601 8.03571 14.4643 8.03571H8.03571V14.4643C8.03557 14.76 7.79578 15 7.5 15C7.20422 15 6.96443 14.76 6.96429 14.4643V8.03571H0.535714C0.239913 8.03571 0.000105998 7.79578 0 7.5C0 7.20413 0.239847 6.96429 0.535714 6.96429H6.96429V0.535714C6.96429 0.239847 7.20413 0 7.5 0Z" fill="white"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Config Price Addition -->
+        <div id="config-price-section" class="mb-6 pb-6 border-b border-gray-200" style="display: none;">
+          <div class="flex items-center justify-between text-sm mb-2">
+            <span class="text-gray-600">Тохиргооны нэмэлт үнэ:</span>
+            <span id="config-price" class="font-semibold text-gray-900">0₮</span>
+          </div>
+        </div>
+
+        <!-- Subtotal -->
+        <div class="flex items-center justify-between mb-6 pb-6 border-b border-gray-200">
+          <span class="text-sm text-gray-600">Нийт:</span>
+          <span id="subtotal" class="text-2xl font-bold text-gray-900">
+            <%= number_to_currency(@sellable.base_price, unit: "₮", precision: 0, format: "%n%u") %>
+          </span>
+        </div>
+
+        <!-- Add to Cart Button -->
+        <%= form_with url: cart_items_path, method: :post, data: { turbo: false }, id: "add-to-cart-form" do |f| %>
+          <input type="hidden" name="cart_item[sellable_id]" value="<%= @sellable.id %>">
+          <input type="hidden" name="cart_item[quantity]" id="cart_quantity" value="1">
+          <input type="hidden" name="cart_item[service_config]" id="service_config_data" value="">
+          
+          <%= button_tag type: "submit", 
+            class: "w-full bg-[#0053E2] hover:bg-[#003299] text-white font-semibold py-3 px-6 rounded-button transition-colors flex items-center justify-center gap-2" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M3.33333 3.33333H5.16667L7.66667 13.3333H15.8333L17.5 6.66667H6.66667" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="8.33333" cy="16.6667" r="1.25" fill="currentColor"/>
+              <circle cx="15" cy="16.6667" r="1.25" fill="currentColor"/>
+            </svg>
+            <span>Сагслах</span>
+          <% end %>
+        <% end %>
+
+        <div class="mt-4">
+          <%= link_to services_path, class: "w-full block text-center border border-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-button hover:bg-gray-50 transition-colors" do %>
+            Буцах
+          <% end %>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const quantityEl = document.getElementById('quantity');
+  const decreaseBtn = document.getElementById('decrease-qty');
+  const increaseBtn = document.getElementById('increase-qty');
+  const subtotalEl = document.getElementById('subtotal');
+  const cartQuantityInput = document.getElementById('cart_quantity');
+  const basePriceEl = document.getElementById('base-price');
+  const configPriceEl = document.getElementById('config-price');
+  const configPriceSection = document.getElementById('config-price-section');
+  const serviceConfigData = document.getElementById('service_config_data');
+  
+  const basePrice = parseFloat(basePriceEl.dataset.basePrice);
+  let quantity = 1;
+  let configPrice = 0;
+  const selectedOptions = {}; // Track selected options by spec_id
+  
+  function updatePrice() {
+    const total = (basePrice * quantity) + configPrice;
+    subtotalEl.textContent = new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(total) + '₮';
+    
+    if (configPrice > 0) {
+      configPriceSection.style.display = 'block';
+      configPriceEl.textContent = new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(configPrice) + '₮';
+    } else {
+      configPriceSection.style.display = 'none';
+    }
+  }
+  
+  function collectConfigData() {
+    const configData = {};
+    
+    // Collect from input fields
+    document.querySelectorAll('[data-config-spec-id]:not(.config-option)').forEach(input => {
+      const specId = input.dataset.configSpecId;
+      const unitPrice = parseFloat(input.dataset.unitPrice || 0);
+      
+      if (input.type === 'checkbox') {
+        if (input.checked) {
+          configData[specId] = { value: true, unit_price: unitPrice };
+        }
+      } else if (input.value) {
+        configData[specId] = { value: input.value, unit_price: unitPrice };
+      }
+    });
+    
+    // Collect from selected options
+    Object.keys(selectedOptions).forEach(specId => {
+      configData[specId] = selectedOptions[specId];
+    });
+    
+    // Calculate total config price
+    configPrice = Object.values(configData).reduce((sum, item) => {
+      if (item.value && item.unit_price) {
+        return sum + parseFloat(item.unit_price);
+      }
+      return sum;
+    }, 0);
+    
+    serviceConfigData.value = JSON.stringify(configData);
+    updatePrice();
+  }
+  
+  // Handle option button clicks
+  document.querySelectorAll('.config-option').forEach(button => {
+    button.addEventListener('click', function() {
+      const specId = this.dataset.configSpecId;
+      const optionValue = this.dataset.optionValue;
+      const unitPrice = parseFloat(this.dataset.unitPrice || 0);
+      
+      // Remove active state from siblings
+      const container = this.closest('[data-config-spec]');
+      container.querySelectorAll('.config-option').forEach(btn => {
+        btn.classList.remove('border-[#0053E2]', 'bg-blue-50');
+        btn.classList.add('border-gray-300');
+      });
+      
+      // Add active state to clicked button
+      this.classList.remove('border-gray-300');
+      this.classList.add('border-[#0053E2]', 'bg-blue-50');
+      
+      // Store selected option
+      selectedOptions[specId] = {
+        value: optionValue,
+        unit_price: unitPrice
+      };
+      
+      collectConfigData();
+    });
+  });
+  
+  if (decreaseBtn) {
+    decreaseBtn.addEventListener('click', function() {
+      if (quantity > 1) {
+        quantity--;
+        quantityEl.textContent = quantity;
+        cartQuantityInput.value = quantity;
+        updatePrice();
+      }
+    });
+  }
+  
+  if (increaseBtn) {
+    increaseBtn.addEventListener('click', function() {
+      quantity++;
+      quantityEl.textContent = quantity;
+      cartQuantityInput.value = quantity;
+      updatePrice();
+    });
+  }
+  
+  // Listen to config input changes
+  document.querySelectorAll('[data-config-spec-id]:not(.config-option)').forEach(input => {
+    input.addEventListener('change', collectConfigData);
+    input.addEventListener('input', collectConfigData);
+  });
+  
+  // Initial config collection
+  collectConfigData();
+});
+</script>

@@ -9,4 +9,9 @@ class ServiceConfigSpec < ApplicationRecord
 
   # Enums
   enum :data_type, { int: 'int', bool: 'bool', string: 'string' }, validate: true
+
+  # Methods
+  def has_options?
+    options.present? && options.is_a?(Array) && options.any?
+  end
 end

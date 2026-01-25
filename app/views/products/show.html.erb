@@ -1,11 +1,22 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <!-- Breadcrumb -->
   <div class="mb-6 text-sm text-gray-500">
-    <%= link_to "Хоол хүнс", products_path, class: "hover:text-[#0053E2]" %> > 
+    <%= link_to "Бүтээгдэхүүн", products_path, class: "hover:text-[#0053E2]" %>
     <% if @product.category %>
-      <%= link_to @product.category.name, products_path(category_id: @product.category.id), class: "hover:text-[#0053E2]" %> > 
+      <% 
+        # Build category hierarchy
+        categories = []
+        current = @product.category
+        while current
+          categories.unshift(current)
+          current = current.parent
+        end
+      %>
+      <% categories.each do |cat| %>
+        > <%= link_to cat.name, products_path(category_id: cat.id), class: "hover:text-[#0053E2]" %>
+      <% end %>
     <% end %>
-    <span class="text-gray-900"><%= @product.sellable.name %></span>
+    > <span class="text-gray-900"><%= @product.sellable.name %></span>
   </div>
 
   <div class="flex gap-8">
