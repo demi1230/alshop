@@ -1,0 +1,9 @@
+apple:
+  name: Apple
+  website_url: https://apple.com
+  created_at: <%= 1.month.ago %>
+
+unused_brand:
+  name: Unused Brand
+  website_url: null
+  created_at: <%= 1.month.ago %>

@@ -1,0 +1,22 @@
+customer_order:
+  user: customer
+  status: pending
+  total_price: 2500000
+  metadata:
+    order_number: ORD-001
+    shipping_address:
+      city: Улаанбаатар
+      district: Баянгол
+    billing_address:
+      city: Улаанбаатар
+      district: Баянгол
+  created_at: <%= 1.day.ago %>
+
+admin_order:
+  user: admin
+  status: paid
+  total_price: 1000000
+  metadata:
+    order_number: ORD-002
+    paid_at: <%= 1.day.ago %>
+  created_at: <%= 2.days.ago %>

@@ -1,0 +1,49 @@
+<%
+  # Product Card Component
+  # Usage: <%= render 'shared/product_card', product: @product %>
+  
+  product ||= nil
+  discount ||= nil
+%>
+
+<div class="bg-[#E9F1FE] rounded-2xl p-4 hover:shadow-lg transition-shadow">
+  <!-- Product Image with Discount Badge -->
+  <div class="relative mb-4">
+    <%= image_tag product.image_url, class: "w-full h-48 object-cover rounded-xl", alt: product.name %>
+    
+    <% if discount %>
+      <div class="absolute top-2 right-2 bg-[#FFC220] text-[#001E60] text-xs font-bold px-3 py-1 rounded-full">
+        -<%= discount %>%
+      </div>
+    <% end %>
+    
+    <!-- Brand Logo if available -->
+    <% if product.brand_logo %>
+      <div class="absolute top-2 left-2 bg-[#001E60] rounded-xl p-2">
+        <%= image_tag product.brand_logo, class: "w-8 h-8 object-contain" %>
+      </div>
+    <% end %>
+  </div>
+  
+  <!-- Product Info -->
+  <div class="space-y-2">
+    <!-- Add to Cart Button -->
+    <%= link_to cart_items_path(product_id: product.id), method: :post, class: "w-full inline-flex items-center justify-center gap-2 px-2 py-2 text-sm font-semibold bg-[#0053E2] hover:bg-[#001E60] text-white rounded-[16px] transition-colors mb-3" do %>
+      <span>Сагслах</span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" class="w-[15px] h-[15px]">
+        <path d="M8 2.75C8 2.47386 7.77614 2.25 7.5 2.25C7.22386 2.25 7 2.47386 7 2.75V7H2.75C2.47386 7 2.25 7.22386 2.25 7.5C2.25 7.77614 2.47386 8 2.75 8H7V12.25C7 12.5261 7.22386 12.75 7.5 12.75C7.77614 12.75 8 12.5261 8 12.25V8H12.25C12.5261 8 12.75 7.77614 12.75 7.5C12.75 7.22386 12.5261 7 12.25 7H8V2.75Z" fill="currentColor"/>
+      </svg>
+    <% end %>
+    
+    <!-- Price -->
+    <div class="flex items-baseline gap-2">
+      <span class="text-xl font-bold text-[#001E60]"><%= number_to_currency(product.price, unit: "", precision: 0) %>₮</span>
+      <% if product.original_price && product.original_price > product.price %>
+        <span class="text-sm text-[#989898] line-through"><%= number_to_currency(product.original_price, unit: "", precision: 0) %>₮</span>
+      <% end %>
+    </div>
+    
+    <!-- Product Name -->
+    <h3 class="text-sm font-medium text-[#333333] line-clamp-2"><%= product.name %></h3>
+  </div>
+</div>

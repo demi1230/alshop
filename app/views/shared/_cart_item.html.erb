@@ -1,0 +1,69 @@
+<%
+  # Cart Item Component
+  # Usage: <%= render 'shared/cart_item', item: cart_item %>
+  
+  item ||= nil
+  product = item.product
+%>
+
+<div class="bg-[#E9F1FE] rounded-2xl p-4">
+  <div class="flex items-start gap-4">
+    <!-- Product Image -->
+    <div class="flex-shrink-0">
+      <%= image_tag product.image_url, class: "w-32 h-32 object-cover rounded-xl", alt: product.name %>
+    </div>
+    
+    <!-- Product Info -->
+    <div class="flex-1 space-y-3">
+      <!-- Product Name & Brand -->
+      <div>
+        <h3 class="text-base font-semibold text-[#001E60]"><%= product.name %></h3>
+        <% if product.variant %>
+          <p class="text-sm text-[#656565] mt-1"><%= product.variant %></p>
+        <% end %>
+      </div>
+      
+      <!-- Options if available -->
+      <% if product.options.present? %>
+        <div class="text-sm text-[#656565]">
+          <%= product.options %>
+        </div>
+      <% end %>
+      
+      <!-- Price and Quantity Controls -->
+      <div class="flex items-center justify-between">
+        <!-- Quantity Controls -->
+        <div class="flex items-center gap-3">
+          <%= button_to cart_item_path(item), method: :patch, params: { quantity: item.quantity - 1 }, class: "w-10 h-10 rounded-full bg-[#0053E2] hover:bg-[#001E60] text-white flex items-center justify-center transition-colors" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" class="w-[15px] h-[15px]">
+              <path d="M2.25 7.5C2.25 7.22386 2.47386 7 2.75 7H12.25C12.5261 7 12.75 7.22386 12.75 7.5C12.75 7.77614 12.5261 8 12.25 8H2.75C2.47386 8 2.25 7.77614 2.25 7.5Z" fill="currentColor"/>
+            </svg>
+          <% end %>
+          
+          <span class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-sm font-semibold text-[#001E60]">
+            <%= item.quantity %>
+          </span>
+          
+          <%= button_to cart_item_path(item), method: :patch, params: { quantity: item.quantity + 1 }, class: "w-10 h-10 rounded-full bg-[#0053E2] hover:bg-[#001E60] text-white flex items-center justify-center transition-colors" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none" class="w-[15px] h-[15px]">
+              <path d="M8 2.75C8 2.47386 7.77614 2.25 7.5 2.25C7.22386 2.25 7 2.47386 7 2.75V7H2.75C2.47386 7 2.25 7.22386 2.25 7.5C2.25 7.77614 2.47386 8 2.75 8H7V12.25C7 12.5261 7.22386 12.75 7.5 12.75C7.77614 12.75 8 12.5261 8 12.25V8H12.25C12.5261 8 12.75 7.77614 12.75 7.5C12.75 7.22386 12.5261 7 12.25 7H8V2.75Z" fill="currentColor"/>
+            </svg>
+          <% end %>
+        </div>
+        
+        <!-- Price -->
+        <div class="text-right">
+          <div class="text-sm text-[#656565]">Нийт:</div>
+          <div class="text-xl font-bold text-[#001E60]"><%= number_to_currency(item.total_price, unit: "", precision: 0) %>₮</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Remove Button -->
+    <%= button_to cart_item_path(item), method: :delete, class: "flex-shrink-0 text-[#656565] hover:text-[#001E60] transition-colors" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 15 15" fill="none" class="w-6 h-6">
+        <path d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.193 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.193 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z" fill="currentColor"/>
+      </svg>
+    <% end %>
+  </div>
+</div>

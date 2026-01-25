@@ -1,0 +1,232 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="flex gap-6">
+    <!-- Filters Sidebar -->
+    <aside class="flex-shrink-0 w-64">
+      <div class="bg-white rounded-lg shadow-sm p-6 sticky top-4">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">Шүүлт</h2>
+        
+        <%= form_with url: products_path, method: :get, data: { turbo: false } do |f| %>
+          <!-- Category Filter -->
+          <div class="mb-6">
+            <h3 class="font-semibold text-gray-900 mb-3">Ангилал</h3>
+            
+            <% if @breadcrumb_categories.present? %>
+              <!-- Show hierarchical breadcrumb -->
+              <div class="p-3 rounded-lg">
+                <div class="flex flex-col gap-2 text-sm text-[#001E60]">
+                  <% @breadcrumb_categories.each_with_index do |cat, index| %>
+                    <div class="flex items-center">
+                      <% if index > 0 %>
+                        <span class="mr-2 text-[#656565]">└</span>
+                      <% end %>
+                      <% 
+                        # Use parent_category_id for parent categories to show all descendants
+                        # Use category_id only for the last (current) category
+                        is_last = index == @breadcrumb_categories.length - 1
+                        link_params = is_last ? { category_id: cat.id } : { parent_category_id: cat.id }
+                      %>
+                      <%= link_to cat.name, 
+                        products_path(link_params),
+                        class: "#{is_last ? 'font-semibold' : 'font-normal'} #{index > 0 ? 'ml-' + (index * 3).to_s : ''} hover:text-[#0053E2] hover:underline transition-colors" %>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% else %>
+              <p class="text-sm text-gray-500 italic">Бүх ангилал</p>
+            <% end %>
+          </div>
+
+          <!-- Brand Filter -->
+          <div class="mb-6">
+            <h3 class="font-semibold text-gray-900 mb-3">Брэнд</h3>
+            <div class="space-y-2">
+              <%= hidden_field_tag :category_id, params[:category_id] %>
+              <%= hidden_field_tag :parent_category_id, params[:parent_category_id] %>
+              <%= hidden_field_tag :discount, params[:discount] %>
+              <%= hidden_field_tag :min_price, params[:min_price] %>
+              <%= hidden_field_tag :max_price, params[:max_price] %>
+              <%= hidden_field_tag :q, params[:q] %>
+              <%= hidden_field_tag :sort, params[:sort] %>
+              <label class="flex items-center">
+                <%= radio_button_tag :brand_id, "", params[:brand_id].blank?, 
+                  class: "w-4 h-4 text-[#0053E2] focus:ring-[#0053E2]",
+                  onchange: "this.form.submit()" %>
+                <span class="ml-2 text-sm text-gray-700">Бүгд</span>
+              </label>
+              <% @available_brands.each do |brand| %>
+                <label class="flex items-center">
+                  <%= radio_button_tag :brand_id, brand.id, params[:brand_id] == brand.id.to_s, 
+                    class: "w-4 h-4 text-[#0053E2] focus:ring-[#0053E2]",
+                    onchange: "this.form.submit()" %>
+                  <span class="ml-2 text-sm text-gray-700"><%= brand.name %></span>
+                </label>
+              <% end %>
+            </div>
+          </div>
+
+          <!-- Discount Filter -->
+          <div class="mb-6">
+            <h3 class="font-semibold text-gray-900 mb-3">Хямдралтай</h3>
+            <%= hidden_field_tag :category_id, params[:category_id] %>
+            <%= hidden_field_tag :parent_category_id, params[:parent_category_id] %>
+            <%= hidden_field_tag :brand_id, params[:brand_id] %>
+            <%= hidden_field_tag :min_price, params[:min_price] %>
+            <%= hidden_field_tag :max_price, params[:max_price] %>
+            <%= hidden_field_tag :q, params[:q] %>
+            <%= hidden_field_tag :sort, params[:sort] %>
+            <label class="flex items-center">
+              <%= check_box_tag :discount, "1", params[:discount] == "1", 
+                class: "w-4 h-4 text-[#0053E2] rounded focus:ring-[#0053E2]",
+                onchange: "this.form.submit()" %>
+              <span class="ml-2 text-sm text-gray-700">Хямдралтай бүтээгдэхүүн</span>
+            </label>
+          </div>
+
+          <!-- Price Range -->
+          <div class="mb-6">
+            <h3 class="font-semibold text-gray-900 mb-3">Үнийн хязгаар</h3>
+            <div class="space-y-3">
+              <%= hidden_field_tag :category_id, params[:category_id] %>
+              <%= hidden_field_tag :parent_category_id, params[:parent_category_id] %>
+              <%= hidden_field_tag :brand_id, params[:brand_id] %>
+              <%= hidden_field_tag :discount, params[:discount] %>
+              <%= hidden_field_tag :q, params[:q] %>
+              <%= hidden_field_tag :sort, params[:sort] %>
+              <div>
+                <%= f.number_field :min_price, 
+                  value: params[:min_price],
+                  placeholder: "500,800₮",
+                  class: "w-full rounded-lg border-gray-300 text-sm focus:border-[#0053E2] focus:ring-[#0053E2]" %>
+              </div>
+              <div>
+                <%= f.number_field :max_price, 
+                  value: params[:max_price],
+                  placeholder: "1,500,800₮",
+                  class: "w-full rounded-lg border-gray-300 text-sm focus:border-[#0053E2] focus:ring-[#0053E2]" %>
+              </div>
+              <%= f.submit "Хайх", class: "w-full bg-[#0053E2] hover:bg-[#003299] text-white text-sm font-semibold py-2 px-4 rounded-button transition-colors" %>
+            </div>
+          </div>
+
+          <%= link_to "Цэвэрлэх", products_path, 
+            class: "w-full block text-center border border-gray-300 text-gray-700 text-sm font-semibold py-2 px-4 rounded-button hover:bg-gray-50 transition-colors" %>
+        <% end %>
+      </div>
+    </aside>
+
+    <!-- Products Grid -->
+    <div class="flex-1">
+      <!-- Results Header -->
+      <div class="flex items-center justify-between mb-6">
+        <p class="text-sm text-gray-600">
+          Нийт <%= @products.total_entries %> илэрцээс 
+          <%= (@products.current_page - 1) * @products.per_page + 1 %>-<%= [(@products.current_page) * @products.per_page, @products.total_entries].min %>-р нь харуулж байна
+        </p>
+        
+        <!-- Sort Dropdown -->
+        <%= form_with url: products_path, method: :get, data: { turbo: false } do |f| %>
+          <%= hidden_field_tag :category_id, params[:category_id] %>
+          <%= hidden_field_tag :brand_id, params[:brand_id] %>
+          <%= hidden_field_tag :discount, params[:discount] %>
+          <%= hidden_field_tag :min_price, params[:min_price] %>
+          <%= hidden_field_tag :max_price, params[:max_price] %>
+          <%= f.select :sort, 
+            [
+              ["Эрэмбэлэх", ""],
+              ["Үнэ багаас их", "price_asc"],
+              ["Үнэ ихээс бага", "price_desc"],
+              ["Нэр А-Я", "name_asc"],
+              ["Нэр Я-А", "name_desc"]
+            ],
+            {},
+            class: "text-sm border-gray-300 rounded-lg focus:border-[#0053E2] focus:ring-[#0053E2]",
+            onchange: "this.form.submit()" %>
+        <% end %>
+      </div>
+
+      <!-- Product Cards Grid -->
+      <% if @products.any? %>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+          <% @products.each do |product| %>
+            <%= render "products/card", product: product %>
+          <% end %>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-8 flex justify-center">
+          <div class="bg-white px-4 py-3 rounded-lg shadow-sm">
+            <%= will_paginate @products, 
+              class: "pagination flex gap-2",
+              inner_window: 2,
+              outer_window: 0,
+              previous_label: "← Өмнөх",
+              next_label: "Дараах →" %>
+          </div>
+        </div>
+      <% else %>
+        <!-- Empty State -->
+        <div class="bg-white rounded-lg shadow-sm text-center py-16">
+          <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+          </svg>
+          <h3 class="mt-4 text-lg font-semibold text-gray-900">Бүтээгдэхүүн олдсонгүй</h3>
+          <p class="mt-2 text-sm text-gray-600">
+            Шүүлтийг өөрчилж дахин оролдоно уу.
+          </p>
+          <%= link_to "Цэвэрлэх", products_path, 
+            class: "mt-6 inline-block bg-[#0053E2] hover:bg-[#003299] text-white font-semibold py-2 px-6 rounded-button transition-colors" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- Tailwind Pagination Styles -->
+<style>
+  .pagination {
+    display: flex;
+    gap: 0.5rem;
+    list-style: none;
+  }
+  .pagination a, .pagination span {
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    min-width: 3rem;
+    text-align: center;
+    display: inline-block;
+    box-sizing: border-box;
+  }
+  .pagination a {
+    color: #4B5563;
+    text-decoration: none;
+    background-color: white;
+    border-color: #E5E7EB;
+  }
+  .pagination a:hover {
+    background-color: #F9FAFB;
+    border-color: #0053E2;
+    color: #0053E2;
+    transform: translateY(-1px);
+  }
+  .pagination .current {
+    background: #0053E2;
+    color: white;
+    font-weight: 600;
+    border-color: #0053E2;
+    box-shadow: 0 4px 12px rgba(0, 83, 226, 0.3);
+    padding: 0.5rem 1.25rem;
+    min-width: 3rem;
+    border-radius: 0.5rem;
+    border: 1px solid transparent;
+  }
+  .pagination .disabled {
+    color: #D1D5DB;
+    cursor: not-allowed;
+    background-color: #F9FAFB;
+    border-color: #E5E7EB;
+  }
+</style>

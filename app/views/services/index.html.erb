@@ -1,0 +1,152 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="flex gap-6">
+    <!-- Filters Sidebar -->
+    <aside class="flex-shrink-0 w-64">
+      <div class="bg-white rounded-lg shadow-sm p-6 sticky top-4">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">Шүүлт</h2>
+        
+        <%= form_with url: services_path, method: :get, data: { turbo: false } do |f| %>
+          <!-- Category Filter -->
+          <div class="mb-6">
+            <h3 class="font-semibold text-gray-900 mb-3">Ангилал</h3>
+            
+            <% if @breadcrumb_categories.present? %>
+              <!-- Show hierarchical breadcrumb -->
+              <div class="p-3 rounded-lg">
+                <div class="flex flex-col gap-2 text-sm text-[#001E60]">
+                  <% @breadcrumb_categories.each_with_index do |cat, index| %>
+                    <div class="flex items-center">
+                      <% if index > 0 %>
+                        <span class="mr-2 text-[#656565]">└</span>
+                      <% end %>
+                      <% 
+                        # Use parent_category_id for parent categories to show all descendants
+                        # Use category_id only for the last (current) category
+                        is_last = index == @breadcrumb_categories.length - 1
+                        link_params = is_last ? { category_id: cat.id } : { parent_category_id: cat.id }
+                      %>
+                      <%= link_to cat.name, 
+                        services_path(link_params),
+                        class: "#{is_last ? 'font-semibold' : 'font-normal'} #{index > 0 ? 'ml-' + (index * 3).to_s : ''} hover:text-[#0053E2] hover:underline transition-colors" %>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% else %>
+              <p class="text-sm text-gray-500 italic">Бүх ангилал</p>
+            <% end %>
+          </div>
+
+          <%= link_to "Цэвэрлэх", services_path, 
+            class: "w-full block text-center border border-gray-300 text-gray-700 text-sm font-semibold py-2 px-4 rounded-button hover:bg-gray-50 transition-colors" %>
+        <% end %>
+      </div>
+    </aside>
+
+    <!-- Services Grid -->
+    <div class="flex-1">
+      <!-- Results Header -->
+      <div class="flex items-center justify-between mb-6">
+        <p class="text-sm text-gray-600">
+          Нийт <%= @services.total_entries %> илэрцээс 
+          <%= (@services.current_page - 1) * @services.per_page + 1 %>-<%= [(@services.current_page) * @services.per_page, @services.total_entries].min %>-р нь харуулж байна
+        </p>
+      </div>
+
+      <!-- Services Grid -->
+      <% if @services.any? %>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <% @services.each do |service| %>
+            <div class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-5 border border-gray-200">
+              <!-- Service Name -->
+              <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                <%= link_to service.sellable.name, service_path(service), class: "hover:text-[#0053E2] transition-colors" %>
+              </h3>
+
+              <!-- Description -->
+              <% if service.sellable.description.present? %>
+                <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+                  <%= service.sellable.description %>
+                </p>
+              <% end %>
+
+              <!-- Price -->
+              <div class="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
+                <span class="text-xl font-bold text-[#001E60]">
+                  <%= number_to_currency(service.sellable.base_price, unit: "₮", format: "%n%u", precision: 0) %>
+                </span>
+                <%= link_to "Дэлгэрэнгүй", service_path(service), class: "px-4 py-2 bg-[#0053E2] hover:bg-[#003299] text-white text-sm font-semibold rounded-button transition-colors" %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Pagination -->
+        <div class="mt-8 flex justify-center">
+          <%= will_paginate @services, 
+            class: "flex space-x-2",
+            inner_window: 2,
+            outer_window: 0,
+            previous_label: "← Өмнөх",
+            next_label: "Дараах →"
+          %>
+        </div>
+      <% else %>
+        <!-- Empty State -->
+        <div class="text-center py-12 bg-white rounded-2xl border border-gray-200">
+          <h3 class="text-lg font-medium text-gray-900">Үйлчилгээ олдсонгүй</h3>
+          <p class="mt-2 text-sm text-gray-500">Шүүлтээ өөрчилж дахин оролдоно уу.</p>
+          <div class="mt-6">
+            <%= link_to "Бүх үйлчилгээ", services_path, class: "inline-flex items-center px-6 py-3 bg-[#0053E2] hover:bg-[#003299] text-white font-semibold rounded-button transition-colors" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- Tailwind Pagination Styles -->
+<style>
+  .pagination {
+    display: flex;
+    gap: 0.5rem;
+    list-style: none;
+  }
+  .pagination a, .pagination span {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    min-width: 3rem;
+    text-align: center;
+    display: inline-block;
+  }
+  .pagination a {
+    color: #4B5563;
+    text-decoration: none;
+    background-color: white;
+    border-color: #E5E7EB;
+  }
+  .pagination a:hover {
+    background-color: #F9FAFB;
+    border-color: #0053E2;
+    color: #0053E2;
+    transform: translateY(-1px);
+  }
+  .pagination .current {
+    background: linear-gradient(135deg, #0053E2 0%, #003299 100%);
+    color: white;
+    font-weight: 600;
+    border-color: #0053E2;
+    box-shadow: 0 4px 12px rgba(0, 83, 226, 0.3);
+    padding: 0.5rem 1rem;
+    min-width: 3rem;
+  }
+  .pagination .disabled {
+    color: #D1D5DB;
+    cursor: not-allowed;
+    background-color: #F9FAFB;
+    border-color: #E5E7EB;
+  }
+</style>

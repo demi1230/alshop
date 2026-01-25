@@ -1,0 +1,33 @@
+<%
+  # Price Display Component
+  # Usage: <%= render 'shared/price_display', current_price: 500800, original_price: 600800 %>
+  
+  current_price ||= 0
+  original_price ||= nil
+  size ||= 'medium' # 'small', 'medium', 'large'
+  
+  current_price_classes = case size
+  when 'small'
+    "text-base font-bold text-[#001E60]"
+  when 'large'
+    "text-3xl font-black text-[#001E60]"
+  else
+    "text-xl font-bold text-[#001E60]"
+  end
+  
+  original_price_classes = case size
+  when 'small'
+    "text-xs text-[#989898] line-through"
+  when 'large'
+    "text-xl text-[#989898] line-through"
+  else
+    "text-sm text-[#989898] line-through"
+  end
+%>
+
+<div class="flex items-baseline gap-2">
+  <span class="<%= current_price_classes %>"><%= number_to_currency(current_price, unit: "", precision: 0) %>₮</span>
+  <% if original_price && original_price > current_price %>
+    <span class="<%= original_price_classes %>"><%= number_to_currency(original_price, unit: "", precision: 0) %>₮</span>
+  <% end %>
+</div>

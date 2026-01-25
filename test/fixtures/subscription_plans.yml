@@ -1,0 +1,7 @@
+monthly_plan:
+  sellable: subscription_sellable
+  price: 50000
+  billing_cycle: monthly
+  trial_days: 0
+  company_id: null
+  created_at: <%= 1.month.ago %>

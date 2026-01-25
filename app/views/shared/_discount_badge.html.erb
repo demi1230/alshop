@@ -1,0 +1,12 @@
+<%
+  # Discount Badge Component
+  # Usage: <%= render 'shared/discount_badge', percentage: 10 %>
+  
+  percentage ||= 0
+%>
+
+<% if percentage > 0 %>
+  <div class="bg-[#FFC220] text-[#001E60] text-xs font-bold px-3 py-1 rounded-full">
+    -<%= percentage %>%
+  </div>
+<% end %>

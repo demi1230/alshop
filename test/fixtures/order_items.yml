@@ -1,0 +1,11 @@
+customer_order_item:
+  order: customer_order
+  sellable: macbook_sellable
+  sellable_variant: macbook_512gb
+  quantity: 1
+  price_at_purchase: 2500000
+  line_total: 2500000
+  config_snapshot:
+    storage: 512GB
+    color: Silver
+  created_at: <%= 1.day.ago %>

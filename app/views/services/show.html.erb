@@ -1,0 +1,118 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Breadcrumbs -->
+  <nav class="mb-6" aria-label="Breadcrumb">
+    <ol class="flex items-center space-x-2 text-sm text-gray-600">
+      <li><%= link_to "Services", services_path, class: "hover:text-toffee-brown-600" %></li>
+      <% if @service.category %>
+        <li><span class="mx-2">/</span></li>
+        <li class="text-gray-900"><%= @service.category.name %></li>
+      <% end %>
+    </ol>
+  </nav>
+
+  <!-- Service Details -->
+  <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+    <div class="p-8">
+      <!-- Header -->
+      <div class="mb-6">
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2"><%= @sellable.name %></h1>
+            
+            <!-- Badges -->
+            <div class="flex flex-wrap gap-2 mb-4">
+              <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium <%= @service.service_type == 'subscription' ? 'bg-purple-100 text-purple-800' : @service.service_type == 'hourly' ? 'bg-toffee-brown-100 text-toffee-brown-800' : 'bg-green-100 text-green-800' %>">
+                <%= @service.service_type.titleize %> Service
+              </span>
+              <% if @service.requires_schedule %>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                  Scheduling Required
+                </span>
+              <% end %>
+              <% if @sellable.is_active %>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                  Available
+                </span>
+              <% else %>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                  Unavailable
+                </span>
+              <% end %>
+            </div>
+
+            <!-- Category -->
+            <% if @service.category %>
+              <p class="text-gray-600 mb-4">
+                <span class="font-medium">Category:</span> <%= @service.category.full_path %>
+              </p>
+            <% end %>
+          </div>
+
+          <!-- Price -->
+          <div class="ml-6 text-right">
+            <div class="text-3xl font-bold text-gray-900">
+              <%= number_to_currency(@sellable.base_price, unit: "$") %>
+            </div>
+            <% if @service.service_type == 'hourly' %>
+              <div class="text-sm text-gray-600">per hour</div>
+            <% elsif @service.service_type == 'subscription' %>
+              <div class="text-sm text-gray-600">per month</div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <% if @sellable.description.present? %>
+        <div class="prose max-w-none mb-8">
+          <h2 class="text-xl font-semibold text-gray-900 mb-3">Description</h2>
+          <p class="text-gray-700 leading-relaxed"><%= @sellable.description %></p>
+        </div>
+      <% end %>
+
+      <!-- Service Details -->
+      <div class="border-t border-gray-200 pt-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Service Information</h2>
+        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <dt class="text-sm font-medium text-gray-600">Service Type</dt>
+            <dd class="mt-1 text-sm text-gray-900"><%= @service.service_type.titleize %></dd>
+          </div>
+          <div>
+            <dt class="text-sm font-medium text-gray-600">Scheduling</dt>
+            <dd class="mt-1 text-sm text-gray-900">
+              <%= @service.requires_schedule ? "Appointment Required" : "No Appointment Needed" %>
+            </dd>
+          </div>
+          <% if @service.category %>
+            <div>
+              <dt class="text-sm font-medium text-gray-600">Category</dt>
+              <dd class="mt-1 text-sm text-gray-900"><%= @service.category.name %></dd>
+            </div>
+          <% end %>
+          <div>
+            <dt class="text-sm font-medium text-gray-600">Base Price</dt>
+            <dd class="mt-1 text-sm text-gray-900">
+              <%= number_to_currency(@sellable.base_price, unit: "$") %>
+              <% if @service.service_type == 'hourly' %>
+                / hour
+              <% elsif @service.service_type == 'subscription' %>
+                / month
+              <% end %>
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-4">
+        <%= link_to "Back to Services", services_path, class: "inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-toffee-brown-500" %>
+        <% if @sellable.is_active %>
+          <button type="button" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-toffee-brown-600 hover:bg-toffee-brown-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-toffee-brown-500">
+            Request Service
+          </button>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

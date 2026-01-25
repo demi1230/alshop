@@ -1,0 +1,107 @@
+<!-- Product Card -->
+<% discount = calculate_discount(product) %>
+<div class="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
+  <%= link_to product_path(product), class: "block" do %>
+    <!-- Product Image with Brand Badge and Discount -->
+    <div class="relative bg-gray-100 aspect-square">
+      <% if product.brand %>
+        <div class="absolute top-3 left-3 bg-black rounded-lg p-2">
+          <span class="text-white text-xs font-semibold"><%= product.brand.name %></span>
+        </div>
+      <% end %>
+      
+      <% if discount %>
+        <div class="absolute top-3 right-3 bg-yellow-300 rounded-full px-3 py-1">
+          <span class="text-sm font-bold">-<%= discount %>%</span>
+        </div>
+      <% end %>
+      
+      <svg class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="400" fill="#E5E7EB"/>
+        <path d="M200 140C185.087 140 172.5 152.587 172.5 167.5C172.5 182.413 185.087 195 200 195C214.913 195 227.5 182.413 227.5 167.5C227.5 152.587 214.913 140 200 140Z" fill="#9CA3AF"/>
+        <path d="M150 220L175 195L200 220L250 170L260 180V260H140V220H150Z" fill="#9CA3AF"/>
+      </svg>
+    </div>
+  <% end %>
+
+    <!-- Product Info -->
+    <div class="p-4">
+      <!-- Add to Cart / View Options Button -->
+      <% has_variants = product.sellable.sellable_variants.count > 1 %>
+      
+      <% if has_variants %>
+        <!-- Multiple variants - show "View Options" button -->
+        <%= link_to product_path(product),
+          class: "w-full bg-[#0053E2] hover:bg-[#003299] text-white text-sm font-semibold py-2 px-4 rounded-button flex items-center justify-center gap-2 mb-3" do %>
+          <span>Сонголтууд</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none">
+            <path d="M8.13961 0.158998C8.3267 -0.0530697 8.63019 -0.0529289 8.81735 0.158998L14.8574 7.00374C15.0506 7.22315 15.047 7.58094 14.8495 7.79561C14.8133 7.83497 14.7721 7.86457 14.7294 7.88877L8.99703 14.8331C8.81334 15.0556 8.51564 15.0557 8.332 14.8331C8.14873 14.6105 8.14848 14.2495 8.332 14.027L13.3486 7.94959H0.499998C0.223918 7.94959 9.89309e-05 7.65287 0 7.28711C0 6.92123 0.223857 6.62463 0.499998 6.62463H13.1445L8.13961 0.926282C7.95347 0.714225 7.95339 0.370823 8.13961 0.158998Z" fill="#E9F1FE"/>
+          </svg>
+        <% end %>
+      <% else %>
+        <!-- No variants or single variant - show "Add to Cart" button -->
+        <%= link_to cart_items_path(cart_item: { 
+          sellable_variant_id: product.sellable.sellable_variants.first&.id, 
+          sellable_id: product.sellable.id,
+          quantity: 1 
+        }),
+          method: :post,
+          data: { turbo_method: :post },
+          class: "w-full bg-[#0053E2] hover:bg-[#003299] text-white text-sm font-semibold py-2 px-4 rounded-button flex items-center justify-center gap-2 mb-3" do %>
+          <span>Сагслах</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none">
+            <path d="M8.13961 0.158998C8.3267 -0.0530697 8.63019 -0.0529289 8.81735 0.158998L14.8574 7.00374C15.0506 7.22315 15.047 7.58094 14.8495 7.79561C14.8133 7.83497 14.7721 7.86457 14.7294 7.88877L8.99703 14.8331C8.81334 15.0556 8.51564 15.0557 8.332 14.8331C8.14873 14.6105 8.14848 14.2495 8.332 14.027L13.3486 7.94959H0.499998C0.223918 7.94959 9.89309e-05 7.65287 0 7.28711C0 6.92123 0.223857 6.62463 0.499998 6.62463H13.1445L8.13961 0.926282C7.95347 0.714225 7.95339 0.370823 8.13961 0.158998Z" fill="#E9F1FE"/>
+          </svg>
+        <% end %>
+      <% end %>
+
+      <!-- Price -->
+      <div class="mb-2">
+        <% 
+          # Get all variant prices (with discounts applied)
+          variants = product.sellable.sellable_variants
+          original_prices = variants.map { |v| v.effective_price }
+          discounted_prices = variants.map { |v| v.discounted_price }
+          
+          min_original = original_prices.min
+          max_original = original_prices.max
+          min_discounted = discounted_prices.min
+          max_discounted = discounted_prices.max
+          
+          price_range_exists = min_discounted != max_discounted
+          has_any_discount = variants.any? { |v| v.has_discount? }
+        %>
+        
+        <% if has_any_discount %>
+          <% if price_range_exists %>
+            <div class="flex items-center gap-2">
+              <span class="text-lg font-bold text-gray-900">
+                <%= number_to_currency(min_discounted, unit: "₮", precision: 0, format: "%n%u") %> - <%= number_to_currency(max_discounted, unit: "₮", precision: 0, format: "%n%u") %>
+              </span>
+              <span class="text-sm text-gray-400 line-through">
+                <%= number_to_currency(min_original, unit: "₮", precision: 0, format: "%n%u") %>
+              </span>
+            </div>
+          <% else %>
+            <div class="flex items-center gap-2">
+              <span class="text-lg font-bold text-gray-900"><%= number_to_currency(min_discounted, unit: "₮", precision: 0, format: "%n%u") %></span>
+              <span class="text-sm text-gray-400 line-through"><%= number_to_currency(min_original, unit: "₮", precision: 0, format: "%n%u") %></span>
+            </div>
+          <% end %>
+        <% else %>
+          <% if price_range_exists %>
+            <span class="text-lg font-bold text-gray-900">
+              <%= number_to_currency(min_discounted, unit: "₮", precision: 0, format: "%n%u") %> - <%= number_to_currency(max_discounted, unit: "₮", precision: 0, format: "%n%u") %>
+            </span>
+          <% else %>
+            <span class="text-lg font-bold text-gray-900"><%= number_to_currency(min_discounted, unit: "₮", precision: 0, format: "%n%u") %></span>
+          <% end %>
+        <% end %>
+      </div>
+
+      <!-- Product Name -->
+      <h3 class="text-sm text-gray-700 line-clamp-2">
+        <%= link_to product.sellable.name, product_path(product), class: "hover:text-[#0053E2]" %>
+      </h3>
+    </div>
+</div>

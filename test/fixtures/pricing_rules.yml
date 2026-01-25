@@ -1,0 +1,27 @@
+bulk_discount:
+  sellable: macbook_sellable
+  sellable_variant_id: null
+  discount_type: percentage
+  value: 10
+  channel: online
+  priority: 10
+  valid_from: <%= 1.week.ago.to_date %>
+  valid_to: <%= 1.month.from_now.to_date %>
+  promo_code: null
+  company_id: null
+  sub_company_id: null
+  created_at: <%= 1.week.ago %>
+
+promo_code_rule:
+  sellable: null
+  sellable_variant_id: null
+  promo_code: SAVE20
+  discount_type: percentage
+  value: 20
+  channel: online
+  priority: 5
+  valid_from: <%= 1.week.ago.to_date %>
+  valid_to: <%= 1.month.from_now.to_date %>
+  company_id: null
+  sub_company_id: null
+  created_at: <%= 1.week.ago %>

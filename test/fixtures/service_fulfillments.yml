@@ -1,0 +1,7 @@
+pending_fulfillment:
+  order_item: customer_order_item
+  assigned_user_id: null
+  status: pending
+  scheduled_at: <%= 2.days.from_now %>
+  result: null
+  created_at: <%= 1.day.ago %>

@@ -1,0 +1,23 @@
+electronics:
+  name: Электроник
+  description: Электрон бараа
+  parent_id: null
+  created_at: <%= 1.month.ago %>
+
+laptops:
+  name: Зөөврийн компьютер
+  description: Ноутбүүк
+  parent_id: <%= ActiveRecord::FixtureSet.identify(:electronics) %>
+  created_at: <%= 1.month.ago %>
+
+gaming_laptops:
+  name: Тоглоомын ноутбүүк
+  description: Тоглоомд зориулсан
+  parent_id: <%= ActiveRecord::FixtureSet.identify(:laptops) %>
+  created_at: <%= 1.month.ago %>
+
+fashion:
+  name: Хувцас
+  description: Хувцас хунар
+  parent_id: null
+  created_at: <%= 1.month.ago %>

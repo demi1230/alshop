@@ -1,0 +1,15 @@
+macbook_sellable:
+  name: MacBook Pro M4
+  description: Хүчирхэг ноутбүүк
+  sellable_type: Product
+  base_price: 2500000
+  is_active: true
+  created_at: <%= 1.month.ago %>
+
+subscription_sellable:
+  name: Сарын багц
+  description: Сар бүрийн багц
+  sellable_type: SubscriptionPlan
+  base_price: 50000
+  is_active: true
+  created_at: <%= 1.month.ago %>

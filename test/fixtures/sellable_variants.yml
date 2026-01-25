@@ -1,0 +1,21 @@
+macbook_512gb:
+  sellable: macbook_sellable
+  sku: MBP-M4-512GB
+  variant_name: 512GB SSD
+  price_override: null
+  is_active: true
+  attributes:
+    storage: 512GB
+    color: Silver
+  created_at: <%= 1.month.ago %>
+
+macbook_1tb:
+  sellable: macbook_sellable
+  sku: MBP-M4-1TB
+  variant_name: 1TB SSD
+  price_override: 500000
+  is_active: true
+  attributes:
+    storage: 1TB
+    color: Space Gray
+  created_at: <%= 1.month.ago %>

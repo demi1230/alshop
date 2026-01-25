@@ -1,0 +1,9 @@
+customer_cart:
+  user: customer
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>
+
+admin_cart:
+  user: admin
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>

@@ -1,0 +1,404 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Breadcrumb -->
+  <div class="mb-6 text-sm text-gray-500">
+    <%= link_to "Хоол хүнс", products_path, class: "hover:text-[#0053E2]" %> > 
+    <% if @product.category %>
+      <%= link_to @product.category.name, products_path(category_id: @product.category.id), class: "hover:text-[#0053E2]" %> > 
+    <% end %>
+    <span class="text-gray-900"><%= @product.sellable.name %></span>
+  </div>
+
+  <div class="flex gap-8">
+    <!-- Product Image -->
+    <div class="flex-shrink-0 w-96">
+      <div class="bg-white rounded-lg p-8 shadow-sm">
+        <div class="relative">
+          <% if @product.brand %>
+            <div class="absolute top-0 left-0 bg-black rounded-lg px-3 py-1">
+              <span class="text-white text-xs font-semibold"><%= @product.brand.name %></span>
+            </div>
+          <% end %>
+          
+          <% if discount = calculate_discount(@product) %>
+            <div class="absolute top-0 right-0 bg-yellow-300 rounded-full px-3 py-1">
+              <span class="text-sm font-bold">-<%= discount %>%</span>
+            </div>
+          <% end %>
+          
+          <svg class="w-full" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="400" height="400" fill="#E5E7EB"/>
+            <path d="M200 140C185.087 140 172.5 152.587 172.5 167.5C172.5 182.413 185.087 195 200 195C214.913 195 227.5 182.413 227.5 167.5C227.5 152.587 214.913 140 200 140Z" fill="#9CA3AF"/>
+            <path d="M150 220L175 195L200 220L250 170L260 180V260H140V220H150Z" fill="#9CA3AF"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Details -->
+    <div class="flex-1">
+      <div class="bg-gray-50 rounded-lg p-6">
+        <h1 class="text-2xl font-bold text-gray-900 mb-4">
+          <%= @product.sellable.name %>
+        </h1>
+
+        <!-- Variant Options -->
+        <% if @product.sellable.sellable_variants.any? %>
+          <% 
+            # Group variants by attribute types
+            all_variants = @product.sellable.sellable_variants
+            attribute_keys = all_variants.map { |v| v.read_attribute(:attributes)&.keys || [] }.flatten.uniq.sort
+            
+            # Get unique values for each attribute (sorted for consistency)
+            grouped_attributes = {}
+            attribute_keys.each do |key|
+              values = all_variants.map { |v| v.read_attribute(:attributes)&.dig(key) }.compact.uniq.sort
+              grouped_attributes[key] = values if values.any?
+            end
+          %>
+          
+          <% grouped_attributes.sort.each do |attribute_name, values| %>
+            <div class="mb-6" data-attribute-group="<%= attribute_name %>">
+              <h3 class="font-semibold text-gray-900 mb-3">
+                <%= attribute_name.capitalize %>
+              </h3>
+              <div class="flex flex-wrap gap-3">
+                <% values.each do |value| %>
+                  <% 
+                    # Find variants with this attribute value
+                    matching_variants = all_variants.select { |v| v.read_attribute(:attributes)&.dig(attribute_name) == value }
+                    variant_ids = matching_variants.map(&:id).join(',')
+                  %>
+                  <button type="button" 
+                    data-attribute="<%= attribute_name %>"
+                    data-value="<%= value %>"
+                    data-variant-ids="<%= variant_ids %>"
+                    class="variant-option px-4 py-2 border-2 border-gray-300 rounded-button text-sm font-semibold text-gray-700 hover:border-[#0053E2] hover:bg-blue-50 transition-colors focus:border-[#0053E2] focus:bg-blue-50">
+                    <%= value %>
+                  </button>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+
+        <!-- Stock Availability -->
+        <div class="mb-6">
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-600">Нөөц байдал:</span>
+            <span id="stock-status" class="text-sm font-semibold"></span>
+          </div>
+        </div>
+
+        <!-- Specifications -->
+        <div class="mb-6">
+          <h3 class="font-semibold text-gray-900 mb-3">Үзүүлэлтүүд</h3>
+          <div class="bg-white rounded-lg border border-gray-200">
+            <ul class="divide-y divide-gray-200">
+              <% if @product.brand %>
+                <li class="flex items-center justify-between px-4 py-3">
+                  <span class="text-sm text-gray-600 font-medium">Брэнд</span>
+                  <span class="text-sm text-gray-900"><%= @product.brand.name %></span>
+                </li>
+              <% end %>
+              <% if @product.category %>
+                <li class="flex items-center justify-between px-4 py-3">
+                  <span class="text-sm text-gray-600 font-medium">Ангилал</span>
+                  <span class="text-sm text-gray-900"><%= @product.category.name %></span>
+                </li>
+              <% end %>
+              
+              <% @product.sellable.specifications.includes(:category_attribute).each do |spec| %>
+                <li class="flex items-center justify-between px-4 py-3">
+                  <span class="text-sm text-gray-600 font-medium"><%= spec.category_attribute.name %></span>
+                  <span class="text-sm text-gray-900"><%= spec.value %></span>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <% if @product.sellable.description.present? %>
+          <div>
+            <h3 class="font-semibold text-gray-900 mb-3">Дэлгэрэнгүй</h3>
+            <p class="text-sm text-gray-700 leading-relaxed">
+              <%= @product.sellable.description %>
+            </p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Price & Add to Cart -->
+    <div class="flex-shrink-0 w-80">
+      <div class="bg-white rounded-lg p-6 shadow-sm sticky top-4">
+        <!-- Price -->
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-2">
+            <span id="price-label" class="text-sm text-gray-600"><%= discount ? "Хямдарсан үнэ" : "Үнэ" %></span>
+            <% if discount %>
+              <span id="original-price-label" class="text-sm text-gray-400">Анхны үнэ</span>
+            <% end %>
+          </div>
+          <div class="flex items-center justify-between">
+            <span id="current-price" class="text-3xl font-bold text-gray-900">
+              <%= number_to_currency(@product.sellable.base_price, unit: "₮", precision: 0, format: "%n%u") %>
+            </span>
+            <% if discount %>
+              <span id="original-price" class="text-xl text-gray-400 line-through">
+                <%= number_to_currency(@product.sellable.base_price * 1.2, unit: "₮", precision: 0, format: "%n%u") %>
+              </span>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Quantity Selector -->
+        <div class="mb-6">
+          <div class="flex items-center justify-center gap-4">
+            <button type="button" id="decrease-qty" class="w-12 h-12 rounded-full flex items-center justify-center transition-all bg-[#0053E2] hover:bg-[#003299] active:bg-[#001E60]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M13.5 6.5C13.7761 6.5 14 6.72386 14 7C14 7.27614 13.7761 7.5 13.5 7.5H0.5C0.223858 7.5 0 7.27614 0 7C0 6.72386 0.223858 6.5 0.5 6.5H13.5Z" fill="white"/>
+              </svg>
+            </button>
+            
+            <span id="quantity" class="text-4xl font-bold text-gray-900 w-16 text-center">1</span>
+            
+            <button type="button" id="increase-qty" class="w-12 h-12 rounded-full flex items-center justify-center transition-all bg-[#0053E2] hover:bg-[#003299] active:bg-[#001E60]">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none">
+                <path d="M7.5 0C7.79587 0 8.03571 0.239847 8.03571 0.535714V6.96429H14.4643C14.7602 6.96429 15 7.20413 15 7.5C14.9999 7.79578 14.7601 8.03571 14.4643 8.03571H8.03571V14.4643C8.03557 14.76 7.79578 15 7.5 15C7.20422 15 6.96443 14.76 6.96429 14.4643V8.03571H0.535714C0.239913 8.03571 0.000105998 7.79578 0 7.5C0 7.20413 0.239847 6.96429 0.535714 6.96429H6.96429V0.535714C6.96429 0.239847 7.20413 0 7.5 0Z" fill="#E9F1FE"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Subtotal -->
+        <div class="flex items-center justify-between mb-6 pb-6 border-b border-gray-200">
+          <span class="text-sm text-gray-600">Нийт:</span>
+          <span id="subtotal" class="text-2xl font-bold text-gray-900">
+            <%= number_to_currency(@product.sellable.base_price, unit: "₮", precision: 0, format: "%n%u") %>
+          </span>
+        </div>
+
+        <!-- Add to Cart Button -->
+        <%= form_with url: cart_items_path, method: :post, data: { turbo: false }, id: "add-to-cart-form" do |f| %>
+          <input type="hidden" name="cart_item[sellable_variant_id]" id="selected_variant_id" value="<%= @product.sellable.sellable_variants.first&.id %>">
+          <input type="hidden" name="cart_item[sellable_id]" value="<%= @product.sellable.id %>">
+          <input type="hidden" name="cart_item[quantity]" id="cart_quantity" value="1">
+          
+          <%= button_tag type: "submit", 
+            id: "add-to-cart-btn",
+            class: "w-full text-white text-base font-bold py-4 px-6 rounded-button flex items-center justify-center gap-2 transition-all bg-[#0053E2] hover:bg-[#003299] active:bg-[#001E60]" do %>
+            <span>Сагслах</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none">
+              <path d="M8.13961 0.158998C8.3267 -0.0530697 8.63019 -0.0529289 8.81735 0.158998L14.8574 7.00374C15.0506 7.22315 15.047 7.58094 14.8495 7.79561C14.8133 7.83497 14.7721 7.86457 14.7294 7.88877L8.99703 14.8331C8.81334 15.0556 8.51564 15.0557 8.332 14.8331C8.14873 14.6105 8.14848 14.2495 8.332 14.027L13.3486 7.94959H0.499998C0.223918 7.94959 9.89309e-05 7.65287 0 7.28711C0 6.92123 0.223857 6.62463 0.499998 6.62463H13.1445L8.13961 0.926282C7.95347 0.714225 7.95339 0.370823 8.13961 0.158998Z" fill="#E9F1FE"/>
+            </svg>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Quantity controls
+  const decreaseBtn = document.getElementById('decrease-qty');
+  const increaseBtn = document.getElementById('increase-qty');
+  const quantityEl = document.getElementById('quantity');
+  const subtotalEl = document.getElementById('subtotal');
+  const cartQuantityInput = document.getElementById('cart_quantity');
+  const basePrice = <%= @product.sellable.base_price %>;
+  
+  let quantity = 1;
+  
+  function updateQuantity(newQty) {
+    quantity = Math.max(1, Math.min(newQty, currentStock));
+    quantityEl.textContent = quantity;
+    cartQuantityInput.value = quantity;
+    const total = currentDiscountedPrice * quantity;
+    subtotalEl.textContent = new Intl.NumberFormat('mn-MN', { 
+      style: 'decimal',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(total) + '₮';
+    
+    updateIncreaseButtonState();
+  }
+  
+  decreaseBtn.addEventListener('click', () => updateQuantity(quantity - 1));
+  increaseBtn.addEventListener('click', () => updateQuantity(quantity + 1));
+  
+  // Variant selection by attributes
+  const selectedAttributes = {};
+  const variantIdInput = document.getElementById('selected_variant_id');
+  
+  // Get all variants data with inventory
+  const allVariants = <%= raw @product.sellable.sellable_variants.includes(:inventory).map { |v| 
+    { 
+      id: v.id, 
+      attributes: v.read_attribute(:attributes),
+      stock: v.inventory&.quantity || 0,
+      price: v.effective_price,
+      discounted_price: v.discounted_price,
+      has_discount: v.has_discount?
+    }
+  }.to_json %>;
+  
+  let currentStock = 0;
+  let currentPrice = <%= @product.sellable.base_price %>;
+  let currentDiscountedPrice = <%= @product.sellable.sellable_variants.first&.discounted_price || @product.sellable.base_price %>;
+  const stockStatusEl = document.getElementById('stock-status');
+  const addToCartBtn = document.getElementById('add-to-cart-btn');
+  const currentPriceEl = document.getElementById('current-price');
+  const originalPriceEl = document.getElementById('original-price');
+  
+  function updateStockDisplay(stock) {
+    currentStock = stock;
+    
+    if (stock === 0) {
+      stockStatusEl.textContent = 'Дууссан';
+      stockStatusEl.className = 'text-sm font-semibold text-red-600';
+      
+      // Disable add to cart button
+      addToCartBtn.disabled = true;
+      addToCartBtn.style.backgroundColor = '#9CA3AF';
+      addToCartBtn.style.cursor = 'not-allowed';
+      addToCartBtn.style.opacity = '0.6';
+      
+      // Disable increase button
+      increaseBtn.disabled = true;
+      increaseBtn.style.backgroundColor = '#D1D5DB';
+      increaseBtn.style.cursor = 'not-allowed';
+      increaseBtn.style.opacity = '0.6';
+    } else if (stock <= 5) {
+      stockStatusEl.textContent = `${stock} ширхэг үлдсэн`;
+      stockStatusEl.className = 'text-sm font-semibold text-orange-600';
+      
+      // Enable add to cart button
+      addToCartBtn.disabled = false;
+      addToCartBtn.style.backgroundColor = '';
+      addToCartBtn.style.cursor = '';
+      addToCartBtn.style.opacity = '';
+    } else {
+      stockStatusEl.textContent = 'Нөөцтэй';
+      stockStatusEl.className = 'text-sm font-semibold text-green-600';
+      
+      // Enable add to cart button
+      addToCartBtn.disabled = false;
+      addToCartBtn.style.backgroundColor = '';
+      addToCartBtn.style.cursor = '';
+      addToCartBtn.style.opacity = '';
+    }
+    
+    // Adjust quantity if it exceeds current stock
+    if (quantity > stock) {
+      updateQuantity(Math.max(1, stock));
+    }
+    
+    // Update increase button state
+    updateIncreaseButtonState();
+  }
+  
+  function updateIncreaseButtonState() {
+    if (quantity >= currentStock) {
+      increaseBtn.disabled = true;
+      increaseBtn.style.backgroundColor = '#D1D5DB';
+      increaseBtn.style.cursor = 'not-allowed';
+      increaseBtn.style.opacity = '0.6';
+    } else {
+      increaseBtn.disabled = false;
+      increaseBtn.style.backgroundColor = '';
+      increaseBtn.style.cursor = '';
+      increaseBtn.style.opacity = '';
+    }
+  }
+  
+  function findMatchingVariant() {
+    // Find variant that matches all selected attributes
+    const match = allVariants.find(variant => {
+      if (!variant.attributes) return false;
+      return Object.keys(selectedAttributes).every(key => 
+        variant.attributes[key] === selectedAttributes[key]
+      );
+    });
+    
+    if (match) {
+      variantIdInput.value = match.id;
+      updateStockDisplay(match.stock);
+      updatePrice(match.discounted_price, match.price, match.has_discount);
+    } else if (allVariants.length > 0) {
+      variantIdInput.value = allVariants[0].id;
+      updateStockDisplay(allVariants[0].stock);
+      updatePrice(allVariants[0].discounted_price, allVariants[0].price, allVariants[0].has_discount);
+    }
+  }
+  
+  function updatePrice(discountedPrice, originalPrice, hasDiscount) {
+    currentDiscountedPrice = discountedPrice;
+    currentPrice = originalPrice;
+    
+    const formattedDiscountedPrice = new Intl.NumberFormat('mn-MN', { 
+      style: 'decimal',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(discountedPrice) + '₮';
+    
+    currentPriceEl.textContent = formattedDiscountedPrice;
+    
+    // Show/hide original price if there's a discount
+    if (hasDiscount && originalPriceEl) {
+      const formattedOriginalPrice = new Intl.NumberFormat('mn-MN', { 
+        style: 'decimal',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(originalPrice) + '₮';
+      originalPriceEl.textContent = formattedOriginalPrice;
+      originalPriceEl.style.display = '';
+    } else if (originalPriceEl) {
+      originalPriceEl.style.display = 'none';
+    }
+    
+    // Update subtotal with current quantity
+    const total = discountedPrice * quantity;
+    subtotalEl.textContent = new Intl.NumberFormat('mn-MN', { 
+      style: 'decimal',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(total) + '₮';
+  }
+  
+  // Handle variant option clicks
+  document.querySelectorAll('.variant-option').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const attribute = this.dataset.attribute;
+      const value = this.dataset.value;
+      
+      // Deselect other options in same attribute group
+      document.querySelectorAll(`.variant-option[data-attribute="${attribute}"]`).forEach(b => {
+        b.classList.remove('border-[#0053E2]', 'bg-blue-50');
+        b.classList.add('border-gray-300');
+      });
+      
+      // Select this option
+      this.classList.add('border-[#0053E2]', 'bg-blue-50');
+      this.classList.remove('border-gray-300');
+      
+      // Update selected attributes
+      selectedAttributes[attribute] = value;
+      
+      // Find and set matching variant
+      findMatchingVariant();
+    });
+  });
+  
+  // Select first option in each attribute group by default
+  const attributeGroups = {};
+  document.querySelectorAll('.variant-option').forEach(btn => {
+    const attr = btn.dataset.attribute;
+    if (!attributeGroups[attr]) {
+      attributeGroups[attr] = btn;
+    }
+  });
+  
+  Object.values(attributeGroups).forEach(btn => btn.click());
+
+</script>

@@ -1,0 +1,6 @@
+macbook_pro:
+  sellable: macbook_sellable
+  category: laptops
+  brand: apple
+  sku_base: MBP-M4
+  created_at: <%= 1.month.ago %>
