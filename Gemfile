@@ -21,7 +21,7 @@ gem "jbuilder"
 gem "bcrypt", "~> 3.1.7"
 
 # Authentication & Authorization
-gem "devise", "~> 4.9"
+gem "devise", "~> 5.0"
 gem "pundit", "~> 2.3"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
