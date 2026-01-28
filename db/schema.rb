@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_25_175425) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_27_052949) do
   create_table "brands", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -143,6 +143,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_25_175425) do
     t.integer "sellable_id", null: false
     t.string "sku_base"
     t.datetime "updated_at", null: false
+    t.json "variant_dimensions"
     t.index ["brand_id"], name: "index_products_on_brand_id"
     t.index ["category_id"], name: "index_products_on_category_id"
     t.index ["sellable_id"], name: "index_products_on_sellable_id", unique: true
@@ -175,9 +176,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_25_175425) do
   create_table "service_config_specs", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "data_type", null: false
+    t.string "default_value"
     t.text "description"
     t.string "field_name", null: false
     t.json "options"
+    t.boolean "required"
     t.integer "service_id", null: false
     t.decimal "unit_price", precision: 10, scale: 2, default: "0.0", null: false
     t.datetime "updated_at", null: false
@@ -257,6 +260,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_25_175425) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.boolean "admin", default: false, null: false
     t.integer "company_id"
     t.datetime "created_at", null: false
     t.string "email", null: false

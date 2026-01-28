@@ -1,0 +1,490 @@
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0053E2]"><%= @service.name %></h1>
+      <p class="text-gray-500 text-sm mt-1">Edit Service</p>
+    </div>
+    <%= link_to admin_services_path, class: "inline-flex items-center gap-2 text-gray-700 font-medium hover:text-gray-900 transition-colors" do %>
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      Буцах
+    <% end %>
+  </div>
+
+  <!-- 1️⃣ Service Info Card -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-lg font-semibold text-[#0053E2] mb-4 flex items-center gap-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+      </svg>
+      Үйлчилгээний мэдээлэл
+    </h2>
+    
+    <%= form_with model: [:admin, @service], local: true, class: "space-y-4" do |f| %>
+      <%= f.fields_for :sellable_attributes, @service.sellable do |sellable_fields| %>
+        <%= sellable_fields.hidden_field :id %>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Name -->
+          <div class="md:col-span-2">
+            <%= sellable_fields.label :name, "Үйлчилгээний нэр", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= sellable_fields.text_field :name, class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]", required: true %>
+          </div>
+
+          <!-- Description -->
+          <div class="md:col-span-2">
+            <%= sellable_fields.label :description, "Тайлбар", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= sellable_fields.text_area :description, rows: 4, class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+          </div>
+
+          <!-- Category -->
+          <div>
+            <%= f.label :category_id, "Ангилал", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= f.select :category_id,
+                hierarchical_category_options(@categories, @service.category_id),
+                { prompt: 'Ангилал сонгох' },
+                class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]",
+                id: "service-category-select" %>
+            <p class="text-sm text-gray-500 mt-1">Зөвхөн дэд ангилалгүй (leaf) ангиллыг сонгох боломжтой</p>
+          </div>
+
+          <!-- Service Type -->
+          <div>
+            <%= f.label :service_type, "Үйлчилгээний төрөл", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= f.select :service_type,
+                options_for_select([
+                  ['Цагийн', 'hourly'],
+                  ['Тогтмол', 'fixed'],
+                  ['Захиалгат', 'subscription']
+                ], @service.service_type),
+                { prompt: 'Төрөл сонгох' },
+                class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]",
+                required: true %>
+          </div>
+
+          <!-- Base Price -->
+          <div>
+            <%= sellable_fields.label :base_price, "Үндсэн үнэ (₮)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= sellable_fields.number_field :base_price, step: 0.01, class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]", required: true %>
+          </div>
+
+          <!-- Requires Schedule -->
+          <div>
+            <%= f.label :requires_schedule, "Цаг захиалга", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <div class="flex items-center gap-3 h-[50px]">
+              <%= f.check_box :requires_schedule, class: "w-6 h-6 text-gray-900 rounded focus:ring-[#0053E2]" %>
+              <span class="text-sm font-semibold text-gray-700">Цаг захиалга шаардлагатай</span>
+            </div>
+          </div>
+
+          <!-- Terms & Conditions -->
+          <div class="md:col-span-2">
+            <%= f.label :terms, "Үйлчилгээний нөхцөл", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= f.text_area :terms, rows: 3, class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]", placeholder: "Үйлчилгээний нөхцөл, анхаарах зүйлс..." %>
+          </div>
+
+          <!-- Active Status -->
+          <div class="md:col-span-2">
+            <%= sellable_fields.label :is_active, "Төлөв", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <div class="flex items-center gap-3 h-[50px]">
+              <%= sellable_fields.check_box :is_active, class: "w-6 h-6 text-gray-900 rounded focus:ring-[#0053E2]" %>
+              <span class="text-sm font-semibold text-gray-700">Идэвхтэй</span>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="flex justify-end pt-4 border-t">
+        <%= f.submit "Үйлчилгээний мэдээлэл хадгалах", class: "px-2 py-2 bg-[#0053E2] text-white font-medium rounded-lg hover:bg-[#004CC9] transition-colors cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 2️⃣ Specifications Card -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-lg font-semibold text-[#0053E2] mb-4 flex items-center gap-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+      </svg>
+      Specifications
+      <span class="text-sm font-normal text-gray-500 ml-2">(Тодорхойлолт)</span>
+    </h2>
+    
+    <% if @service.category.blank? %>
+      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <p class="text-sm text-yellow-800">
+          Спецификаци нэмэхийн тулд эхлээд <strong>Ангилал</strong> сонгоно уу.
+        </p>
+      </div>
+    <% elsif @category_attributes.empty? %>
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p class="text-sm text-blue-800 mb-2">
+          <strong><%= @service.category.name %></strong> ангилалд спецификаци тодорхойлогдоогүй байна
+        </p>
+        <p class="text-xs text-blue-700">
+          Спецификаци нэмэхийн тулд Category Attributes хэсэгт орж тохиргоо хийнэ үү
+        </p>
+      </div>
+    <% else %>
+      <%= form_with model: [:admin, @service], local: true, class: "space-y-4" do |f| %>
+        <%= f.fields_for :sellable_attributes, @service.sellable do |sellable_fields| %>
+          <%= sellable_fields.hidden_field :id %>
+          
+          <div id="specifications-container" class="space-y-3">
+            <% @category_attributes.each_with_index do |attr, index| %>
+              <% spec = @service.sellable.specifications.find_or_initialize_by(category_attribute_id: attr.id) %>
+              <%= sellable_fields.fields_for :specifications, spec, index: index do |spec_fields| %>
+                <%= spec_fields.hidden_field :id if spec.persisted? %>
+                <%= spec_fields.hidden_field :category_attribute_id %>
+                
+                <div class="specification-field p-4 border border-gray-200 rounded-lg bg-gray-50">
+                  <div class="flex items-start gap-3">
+                    <div class="flex-1">
+                      <%= spec_fields.label :value, attr.name, class: "block text-sm font-medium text-gray-700 mb-2" %>
+                      <%= spec_fields.text_field :value, class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+
+                      <% if attr.unit.present? %>
+                        <p class="text-sm text-gray-500 mt-1">📏 Нэгж: <%= attr.unit %></p>
+                      <% end %>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+
+        <div class="flex justify-end pt-4 border-t">
+          <%= f.submit "Тодорхойлолт хадгалах", class: "px-2 py-2 bg-[#0053E2] text-white font-medium rounded-lg hover:bg-[#004CC9] transition-colors cursor-pointer" %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- 3️⃣ Pricing Rules Card -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-[#0053E2] flex items-center gap-2">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        Pricing Rules
+        <span class="text-sm font-normal text-gray-500 ml-2">(Үнийн дүрэм)</span>
+      </h2>
+      <button type="button" onclick="addPricingRule()" class="px-2 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors text-sm">
+        + Дүрэм нэмэх
+      </button>
+    </div>
+
+    <%= form_with model: [:admin, @service], local: true do |f| %>
+      <%= f.fields_for :sellable_attributes, @service.sellable do |sellable_fields| %>
+        <%= sellable_fields.hidden_field :id %>
+        
+        <div id="pricing-rules-container" class="space-y-4">
+          <%= sellable_fields.fields_for :pricing_rules do |rule_fields| %>
+            <div class="pricing-rule-field p-4 border-2 border-gray-200 rounded-lg bg-gray-50">
+              <%= rule_fields.hidden_field :id %>
+              <%= rule_fields.hidden_field :_destroy, class: "destroy-field" %>
+              
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Channel -->
+                <div>
+                  <%= rule_fields.label :channel, "Сувгийн төрөл", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= rule_fields.select :channel,
+                      options_for_select([
+                        ['Нийтийн', 'public'],
+                        ['Компани', 'company'],
+                        ['Дэд компани', 'sub_company'],
+                        ['Түншлэгч', 'partner'],
+                        ['Урамшуулал', 'promo']
+                      ], rule_fields.object.channel),
+                      {},
+                      class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]",
+                      required: true %>
+                </div>
+
+                <!-- Discount Type -->
+                <div>
+                  <%= rule_fields.label :discount_type, "Хөнгөлөлтийн төрөл", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= rule_fields.select :discount_type,
+                      options_for_select([
+                        ['Хувь (%)', 'percentage'],
+                        ['Тогтмол дүн (₮)', 'fixed'],
+                        ['Шууд үнэ', 'override']
+                      ], rule_fields.object.discount_type),
+                      {},
+                      class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]",
+                      required: true %>
+                </div>
+
+                <!-- Value -->
+                <div>
+                  <%= rule_fields.label :value, "Утга", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= rule_fields.number_field :value, step: 0.01, class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]", required: true %>
+                </div>
+
+                <!-- Priority -->
+                <div>
+                  <%= rule_fields.label :priority, "Эрэмбэ", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= rule_fields.number_field :priority, value: rule_fields.object.priority || 0, class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+                </div>
+
+                <!-- Valid From -->
+                <div>
+                  <%= rule_fields.label :valid_from, "Эхлэх огноо", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= rule_fields.date_field :valid_from, class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+                </div>
+
+                <!-- Valid To -->
+                <div>
+                  <%= rule_fields.label :valid_to, "Дуусах огноо", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= rule_fields.date_field :valid_to, class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+                </div>
+
+                <!-- Promo Code -->
+                <div class="md:col-span-2">
+                  <%= rule_fields.label :promo_code, "Урамшууллын код (заавал биш)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+                  <%= rule_fields.text_field :promo_code, class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]", placeholder: "SUMMER2026" %>
+                </div>
+
+                <!-- Remove Button -->
+                <div class="flex items-end">
+                  <button type="button" onclick="removePricingRule(this)" class="w-full px-2 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors">
+                    🗑️ Устгах
+                  </button>
+                </div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <% if @service.sellable.pricing_rules.empty? %>
+          <div class="text-center py-12 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <svg class="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="font-bold text-lg">Үнийн дүрэм байхгүй байна</p>
+            <p class="text-sm mt-2">"+ Дүрэм нэмэх" товчийг дарж шинэ дүрэм нэмнэ үү</p>
+          </div>
+        <% end %>
+      <% end %>
+
+      <div class="flex justify-end pt-4 border-t mt-6">
+        <%= f.submit "Үнийн дүрмүүд хадгалах", class: "px-2 py-2 bg-[#0053E2] text-white font-medium rounded-lg hover:bg-[#004CC9] transition-colors cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 4️⃣ Service Config Specs Card -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-[#0053E2] flex items-center gap-2">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+        </svg>
+        Service Configuration
+        <span class="text-sm font-normal text-gray-500 ml-2">(Тохиргооны талбарууд)</span>
+      </h2>
+      <%= link_to "Тохиргоо нэмэх", new_admin_service_service_config_spec_path(@service), class: "px-2 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors text-sm" %>
+    </div>
+
+    <% if @service.service_config_specs.any? %>
+      <div class="space-y-3">
+        <% @service.service_config_specs.each do |spec| %>
+          <div class="p-4 border border-gray-200 rounded-lg bg-gray-50 flex items-center justify-between">
+            <div class="flex-1">
+              <h3 class="font-semibold text-gray-900"><%= spec.field_name %></h3>
+              <p class="text-sm text-gray-600 mt-1"><%= spec.description %></p>
+              <div class="flex gap-4 mt-2">
+                <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                  <%= spec.data_type %>
+                </span>
+                <% if spec.required %>
+                  <span class="text-xs px-2 py-1 bg-red-100 text-red-800 rounded">Шаардлагатай</span>
+                <% end %>
+                <% if spec.unit_price > 0 %>
+                  <span class="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">
+                    +<%= number_to_currency(spec.unit_price, unit: "₮", precision: 0, format: "%n%u") %>
+                  </span>
+                <% end %>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <%= link_to edit_admin_service_service_config_spec_path(@service, spec), class: "inline-flex items-center justify-center w-8 h-8 rounded-lg text-[#0053E2] hover:bg-blue-50 transition-colors" do %>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+              <% end %>
+              <%= button_to admin_service_service_config_spec_path(@service, spec), method: :delete, data: { turbo_confirm: "Та энэ тохиргоог устгахдаа итгэлтэй байна уу?" }, class: "inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors" do %>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="text-center py-12 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+        <svg class="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+        </svg>
+        <p class="font-bold text-lg">Тохиргооны талбар байхгүй</p>
+        <p class="text-sm mt-2">Үйлчилгээний тохиргооны талбар нэмэхдээ "Тохиргоо нэмэх" товчийг дарна уу</p>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 5️⃣ Subscription Plans Card (only for subscription services) -->
+  <% if @service.service_type == 'subscription' %>
+    <div class="bg-white rounded-lg shadow p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-[#0053E2] flex items-center gap-2">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          Subscription Plans
+          <span class="text-sm font-normal text-gray-500 ml-2">(Захиалгын төлөвлөгөө)</span>
+        </h2>
+        <%= link_to "План нэмэх", new_admin_service_subscription_plan_path(@service), class: "px-2 py-2 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg transition-colors text-sm" %>
+      </div>
+
+      <% if @service.sellable.subscription_plans.any? %>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <% @service.sellable.subscription_plans.each do |plan| %>
+            <div class="p-4 border-2 <%= plan.is_featured ? 'border-[#0053E2] bg-blue-50' : 'border-gray-200 bg-gray-50' %> rounded-lg">
+              <% if plan.is_featured %>
+                <span class="inline-block px-2 py-1 bg-[#0053E2] text-white text-xs font-bold rounded mb-2">FEATURED</span>
+              <% end %>
+              <h3 class="text-lg font-bold text-gray-900"><%= plan.name %></h3>
+              <div class="mt-2">
+                <span class="text-3xl font-bold text-[#0053E2]"><%= number_to_currency(plan.price, unit: "₮", precision: 0, format: "%n") %></span>
+                <span class="text-gray-600">₮/<%= plan.billing_cycle %></span>
+              </div>
+              <% if plan.description.present? %>
+                <p class="text-sm text-gray-600 mt-2"><%= plan.description %></p>
+              <% end %>
+              <div class="mt-3 flex items-center gap-2">
+                <%= link_to edit_admin_service_subscription_plan_path(@service, plan), class: "flex-1 inline-flex items-center justify-center px-3 py-2 text-sm text-[#0053E2] hover:bg-blue-100 rounded-lg transition-colors" do %>
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                  </svg>
+                  Засах
+                <% end %>
+                <%= button_to admin_service_subscription_plan_path(@service, plan), method: :delete, data: { turbo_confirm: "Энэ төлөвлөгөөг устгах уу?" }, class: "flex-1 inline-flex items-center justify-center px-3 py-2 text-sm text-red-600 hover:bg-red-100 rounded-lg transition-colors" do %>
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                  Устгах
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-center py-12 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+          <svg class="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <p class="font-bold text-lg">Төлөвлөгөө байхгүй</p>
+          <p class="text-sm mt-2">Захиалгын төлөвлөгөө (Сар бүр, Жил бүр) нэмэхдээ "План нэмэх" товчийг дарна уу</p>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  // Pricing Rules JavaScript
+  let pricingRuleIndex = <%= @service.sellable.pricing_rules.size %>;
+
+  window.addPricingRule = function() {
+    const container = document.getElementById('pricing-rules-container');
+    const newRule = `
+      <div class="pricing-rule-field p-4 border-2 border-gray-200 rounded-lg bg-gray-50">
+        <input type="hidden" name="service[sellable_attributes][pricing_rules_attributes][${pricingRuleIndex}][_destroy]" value="false" class="destroy-field">
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Channel -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Сувгийн төрөл</label>
+            <select name="service[sellable_attributes][pricing_rules_attributes][${pricingRuleIndex}][channel]" class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" required>
+              <option value="public">Нийтийн</option>
+              <option value="company">Компани</option>
+              <option value="sub_company">Дэд компани</option>
+              <option value="partner">Түншлэгч</option>
+              <option value="promo">Урамшуулал</option>
+            </select>
+          </div>
+
+          <!-- Discount Type -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Хөнгөлөлтийн төрөл</label>
+            <select name="service[sellable_attributes][pricing_rules_attributes][${pricingRuleIndex}][discount_type]" class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" required>
+              <option value="percentage">Хувь (%)</option>
+              <option value="fixed">Тогтмол дүн (₮)</option>
+              <option value="override">Шууд үнэ</option>
+            </select>
+          </div>
+
+          <!-- Value -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Утга</label>
+            <input type="number" step="0.01" name="service[sellable_attributes][pricing_rules_attributes][${pricingRuleIndex}][value]" class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" required>
+          </div>
+
+          <!-- Priority -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Эрэмбэ</label>
+            <input type="number" name="service[sellable_attributes][pricing_rules_attributes][${pricingRuleIndex}][priority]" value="0" class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]">
+          </div>
+
+          <!-- Valid From -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Эхлэх огноо</label>
+            <input type="date" name="service[sellable_attributes][pricing_rules_attributes][${pricingRuleIndex}][valid_from]" class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]">
+          </div>
+
+          <!-- Valid To -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Дуусах огноо</label>
+            <input type="date" name="service[sellable_attributes][pricing_rules_attributes][${pricingRuleIndex}][valid_to]" class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]">
+          </div>
+
+          <!-- Promo Code -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Урамшууллын код (заавал биш)</label>
+            <input type="text" name="service[sellable_attributes][pricing_rules_attributes][${pricingRuleIndex}][promo_code]" class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" placeholder="SUMMER2026">
+          </div>
+
+          <!-- Remove Button -->
+          <div class="flex items-end">
+            <button type="button" onclick="removePricingRule(this)" class="w-full px-2 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors">
+              🗑️ Устгах
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', newRule);
+    pricingRuleIndex++;
+  };
+
+  window.removePricingRule = function(button) {
+    const ruleField = button.closest('.pricing-rule-field');
+    const idInput = ruleField.querySelector('input[name*="[id]"]');
+    const destroyInput = ruleField.querySelector('.destroy-field');
+    
+    if (idInput && idInput.value) {
+      // Existing rule - mark for destruction
+      destroyInput.value = '1';
+      ruleField.style.display = 'none';
+    } else {
+      // New rule - remove from DOM
+      ruleField.remove();
+    }
+  };
+</script>

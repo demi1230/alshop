@@ -1,0 +1,214 @@
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0053E2]">Үнийн дүрэм</h1>
+      <p class="text-gray-500 text-sm mt-1">Pricing Rules Management</p>
+    </div>
+    <%= link_to new_admin_pricing_rule_path, class: "inline-flex items-center gap-2 px-2 py-2 bg-[#0053E2] text-white text-sm rounded-lg hover:bg-[#004CC9] transition-colors" do %>
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+      </svg>
+      Шинэ дүрэм
+    <% end %>
+  </div>
+
+  <!-- Search & Filters -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <%= form_with url: admin_pricing_rules_path, method: :get, local: true, class: "space-y-4" do |f| %>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Search -->
+        <div>
+          <%= f.label :search, "Хайх", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.text_field :search, value: params[:search], placeholder: "Бүтээгдэхүүн, промо код...", class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+        </div>
+
+        <!-- Channel Filter -->
+        <div>
+          <%= f.label :channel, "Суваг", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.select :channel, 
+            options_for_select([
+              ['Бүгд', 'all'],
+              ['Нийтийн', 'public'],
+              ['Компани', 'company'],
+              ['Дэд компани', 'sub_company'],
+              ['Түнш', 'partner'],
+              ['Промо', 'promo']
+            ], params[:channel] || 'all'),
+            {}, 
+            class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2] focus:border-[#0053E2]" %>
+        </div>
+
+        <!-- Discount Type Filter -->
+        <div>
+          <%= f.label :discount_type, "Хөнгөлөлтийн төрөл", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.select :discount_type,
+            options_for_select([
+              ['Бүгд', 'all'],
+              ['Хувь', 'percentage'],
+              ['Тогтмол дүн', 'fixed'],
+              ['Үнэ солих', 'override']
+            ], params[:discount_type] || 'all'),
+            {},
+            class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+        </div>
+
+        <!-- Status Filter -->
+        <div>
+          <%= f.label :status, "Төлөв", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.select :status,
+            options_for_select([
+              ['Бүгд', ''],
+              ['Идэвхтэй', 'active'],
+              ['Дууссан', 'expired']
+            ], params[:status]),
+            {},
+            class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2] focus:border-[#0053E2]" %>
+        </div>
+      </div>
+
+      <div class="flex gap-2">
+        <%= f.submit "Хайх", class: "px-2 py-2 bg-[#0053E2] text-white text-sm rounded-lg hover:bg-[#004CC9] transition-colors cursor-pointer" %>
+        <%= link_to "Цэвэрлэх", admin_pricing_rules_path, class: "px-2 py-2 border border-gray-300 text-gray-700 text-sm rounded-lg hover:bg-gray-50 transition-colors" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Pricing Rules Table -->
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <% if @pricing_rules.any? %>
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Бүтээгдэхүүн/Үйлчилгээ</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Суваг</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Хөнгөлөлт</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Хугацаа</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Эрэмбэ</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Промо код</th>
+              <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Үйлдэл</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <% @pricing_rules.each do |rule| %>
+              <tr class="hover:bg-gray-50 transition-colors">
+                <!-- Sellable -->
+                <td class="px-6 py-4">
+                  <% if rule.sellable %>
+                    <div class="font-medium text-gray-900"><%= rule.sellable.name %></div>
+                    <div class="text-sm text-gray-500">
+                      <%= rule.sellable.sellable_type == 'Product' ? 'Бүтээгдэхүүн' : 'Үйлчилгээ' %>
+                    </div>
+                  <% else %>
+                    <span class="text-gray-500">Бүгд</span>
+                  <% end %>
+                </td>
+
+                <!-- Channel -->
+                <td class="px-6 py-4">
+                  <% channel_labels = {
+                    'public' => ['Нийтийн', 'bg-blue-50 text-[#0053E2]'],
+                    'company' => ['Компани', 'bg-purple-100 text-purple-700'],
+                    'sub_company' => ['Дэд компани', 'bg-indigo-100 text-indigo-700'],
+                    'partner' => ['Түнш', 'bg-green-100 text-green-700'],
+                    'promo' => ['Промо', 'bg-orange-100 text-orange-700']
+                  } %>
+                  <% label, color = channel_labels[rule.channel] || ['', 'bg-gray-100 text-gray-700'] %>
+                  <span class="inline-flex px-3 py-1.5 text-sm font-medium rounded <%= color %>">
+                    <%= label %>
+                  </span>
+                </td>
+
+                <!-- Discount -->
+                <td class="px-6 py-4">
+                  <div class="font-medium text-gray-900">
+                    <% case rule.discount_type %>
+                    <% when 'percentage' %>
+                      <%= rule.value %>%
+                    <% when 'fixed' %>
+                      -<%= number_to_currency(rule.value, unit: '₮', precision: 0) %>
+                    <% when 'override' %>
+                      <%= number_to_currency(rule.value, unit: '₮', precision: 0) %>
+                    <% end %>
+                  </div>
+                  <div class="text-sm text-gray-500">
+                    <% type_labels = {'percentage' => 'Хувь', 'fixed' => 'Тогтмол', 'override' => 'Үнэ солих'} %>
+                    <%= type_labels[rule.discount_type] %>
+                  </div>
+                </td>
+
+                <!-- Valid Dates -->
+                <td class="px-6 py-4">
+                  <% if rule.valid_from || rule.valid_to %>
+                    <div class="text-sm text-gray-700">
+                      <% if rule.valid_from %>
+                        <div><%= rule.valid_from.strftime('%Y-%m-%d') %></div>
+                      <% end %>
+                      <% if rule.valid_to %>
+                        <div><%= rule.valid_to.strftime('%Y-%m-%d') %></div>
+                      <% end %>
+                    </div>
+                  <% else %>
+                    <span class="text-gray-500">Хязгааргүй</span>
+                  <% end %>
+                </td>
+
+                <!-- Priority -->
+                <td class="px-6 py-4">
+                  <span class="inline-flex items-center justify-center px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded">
+                    <%= rule.priority %>
+                  </span>
+                </td>
+
+                <!-- Promo Code -->
+                <td class="px-6 py-4">
+                  <% if rule.promo_code.present? %>
+                    <code class="px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-mono rounded"><%= rule.promo_code %></code>
+                  <% else %>
+                    <span class="text-gray-500">-</span>
+                  <% end %>
+                </td>
+
+                <!-- Actions -->
+                <td class="px-6 py-4">
+                  <div class="flex items-center justify-center gap-2">
+                    <%= link_to edit_admin_pricing_rule_path(rule), class: "inline-flex items-center justify-center w-8 h-8 rounded-lg text-[#0053E2] hover:bg-blue-50 transition-colors" do %>
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                    <% end %>
+                    <%= link_to admin_pricing_rule_path(rule), method: :delete, data: { confirm: 'Устгах уу?' }, class: "inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-600 hover:bg-red-50 transition-colors" do %>
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="px-6 py-4 border-t border-gray-200">
+        <%= will_paginate @pricing_rules, 
+          previous_label: '← Өмнөх', 
+          next_label: 'Дараах →',
+          class: 'flex justify-center gap-2' %>
+      </div>
+    <% else %>
+      <!-- Empty State -->
+      <div class="px-6 py-16 text-center">
+        <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+        </svg>
+        <p class="text-lg font-medium text-gray-900 mb-2">Үнийн дүрэм олдсонгүй</p>
+        <% if params[:search].present? || params[:channel] != 'all' || params[:discount_type] != 'all' %>
+          <%= link_to "Хайлтыг цэвэрлэх", admin_pricing_rules_path, class: "text-[#0053E2] hover:text-[#004CC9]" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

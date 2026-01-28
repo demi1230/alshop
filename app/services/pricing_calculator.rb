@@ -49,7 +49,7 @@ class PricingCalculator
     rules = PricingRule
       .where('valid_from IS NULL OR valid_from <= ?', Time.current)
       .where('valid_to IS NULL OR valid_to >= ?', Time.current)
-      .order(priority: :asc)
+      .order(priority: :desc)
 
     # If variant is specified, first look for variant-specific rules
     if variant
@@ -57,8 +57,8 @@ class PricingCalculator
       return variant_rule if variant_rule
     end
 
-    # Fall back to sellable-level rules
-    rules.where(sellable: sellable).first
+    # Fall back to sellable-level rules (where sellable_variant_id is NULL)
+    rules.where(sellable: sellable, sellable_variant_id: nil).first
   end
 
   def apply_discount(base, rule)

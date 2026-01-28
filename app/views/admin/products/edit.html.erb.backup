@@ -1,0 +1,588 @@
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-black text-[#0053E2]"><%= @product.name %></h1>
+      <p class="text-[#989898] font-medium mt-1">Edit Product</p>
+    </div>
+    <%= link_to admin_products_path, class: "inline-flex items-center gap-2 text-[#656565] font-bold hover:text-[#0053E2] transition-colors" do %>
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      Back to Products
+    <% end %>
+  </div>
+
+  <!-- 1️⃣ Product Info Card -->
+  <div class="bg-white rounded-[16px] shadow-md p-6">
+    <h2 class="text-xl font-black text-[#0053E2] mb-4 flex items-center gap-2">
+      <%= heroicon('cube', class: 'w-6 h-6') %>
+      Product Info
+    </h2>
+    
+    <%= form_with model: [:admin, @product], local: true, class: "space-y-4" do |f| %>
+      <%= f.fields_for :sellable_attributes, @product.sellable do |sellable_fields| %>
+        <%= sellable_fields.hidden_field :id %>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Name -->
+          <div class="md:col-span-2">
+            <%= sellable_fields.label :name, "Product Name", class: "block text-sm font-bold text-[#656565] mb-2" %>
+            <%= sellable_fields.text_field :name, class: "w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+          </div>
+
+          <!-- Description -->
+          <div class="md:col-span-2">
+            <%= sellable_fields.label :description, "Description", class: "block text-sm font-bold text-[#656565] mb-2" %>
+            <%= sellable_fields.text_area :description, rows: 4, class: "w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+          </div>
+
+          <!-- Category -->
+          <div>
+            <%= f.label :category_id, "Category", class: "block text-sm font-bold text-[#656565] mb-2" %>
+            <%= f.select :category_id,
+                options_for_select(@categories.map { |c| [c.name, c.id] }, @product.category_id),
+                { prompt: 'Select a category' },
+                class: "w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+          </div>
+
+          <!-- Brand -->
+          <div>
+            <%= f.label :brand_id, "Brand", class: "block text-sm font-bold text-[#656565] mb-2" %>
+            <%= f.select :brand_id,
+                options_for_select(@brands.map { |b| [b.name, b.id] }, @product.brand_id),
+                { prompt: 'Select a brand' },
+                class: "w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+          </div>
+
+          <!-- Base Price -->
+          <div>
+            <%= sellable_fields.label :base_price, "Base Price (₮)", class: "block text-sm font-bold text-[#656565] mb-2" %>
+            <%= sellable_fields.number_field :base_price, step: 0.01, class: "w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+          </div>
+
+          <!-- Status -->
+          <div>
+            <%= sellable_fields.label :is_active, "Status", class: "block text-sm font-bold text-[#656565] mb-2" %>
+            <div class="flex items-center gap-3 h-[50px]">
+              <%= sellable_fields.check_box :is_active, class: "w-6 h-6 text-[#0053E2] rounded focus:ring-[#0053E2]" %>
+              <span class="text-sm font-semibold text-[#656565]">Active</span>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="flex justify-end pt-4 border-t">
+        <%= f.submit "Save Product Info", class: "px-6 py-3 bg-[#0053E2] text-white font-bold rounded-[16px] hover:bg-[#003299] transition-colors cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 2️⃣ Specifications Card -->
+  <% if @product.category.present? && @product.category.category_attributes.any? %>
+    <div class="bg-white rounded-[16px] shadow-md p-6">
+      <h2 class="text-xl font-black text-[#0053E2] mb-4 flex items-center gap-2">
+        <%= heroicon('document-text', class: 'w-6 h-6') %>
+        Specifications
+      </h2>
+      
+      <%= form_with model: [:admin, @product], url: admin_product_path(@product), method: :patch, local: true do |f| %>
+        <%= f.fields_for :sellable_attributes, @product.sellable do |sellable_fields| %>
+          <%= sellable_fields.hidden_field :id %>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <%= sellable_fields.fields_for :specifications_attributes do |spec_fields| %>
+              <%= spec_fields.hidden_field :id %>
+              <div>
+                <%= spec_fields.label :value, spec_fields.object.category_attribute&.name || "Attribute", class: "block text-sm font-bold text-[#656565] mb-2" %>
+                <%= spec_fields.text_field :value, class: "w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+                <%= spec_fields.hidden_field :category_attribute_id %>
+              </div>
+            <% end %>
+          </div>
+
+          <div class="flex justify-end pt-4 border-t mt-4">
+            <%= f.submit "Save Specifications", class: "px-6 py-3 bg-[#0053E2] text-white font-bold rounded-[16px] hover:bg-[#003299] transition-colors cursor-pointer" %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- 3️⃣ Variants & Inventory Card -->
+  <div class="bg-white rounded-[16px] shadow-md p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-black text-[#0053E2] flex items-center gap-2">
+        <%= heroicon('squares-2x2', class: 'w-6 h-6') %>
+        Variants & Inventory
+      </h2>
+      <button type="button" onclick="openVariantModal()" class="inline-flex items-center gap-2 bg-[#FFC220] text-[#0053E2] font-bold px-4 py-2 rounded-[16px] hover:bg-[#FFD666] transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        Add Variant
+      </button>
+    </div>
+
+    <!-- Variants Table -->
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-[#E9F1FE]">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-black text-[#0053E2] uppercase">Name</th>
+            <th class="px-4 py-3 text-left text-xs font-black text-[#0053E2] uppercase">Size</th>
+            <th class="px-4 py-3 text-left text-xs font-black text-[#0053E2] uppercase">Color</th>
+            <th class="px-4 py-3 text-left text-xs font-black text-[#0053E2] uppercase">SKU</th>
+            <th class="px-4 py-3 text-left text-xs font-black text-[#0053E2] uppercase">Price</th>
+            <th class="px-4 py-3 text-left text-xs font-black text-[#0053E2] uppercase">Stock</th>
+            <th class="px-4 py-3 text-left text-xs font-black text-[#0053E2] uppercase">Status</th>
+            <th class="px-4 py-3 text-right text-xs font-black text-[#0053E2] uppercase">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% if @product.sellable.sellable_variants.any? %>
+            <% @product.sellable.sellable_variants.each do |variant| %>
+              <tr class="hover:bg-gray-50">
+                <td class="px-4 py-3 font-semibold text-[#0053E2]"><%= variant.variant_name %></td>
+                <td class="px-4 py-3 text-sm text-[#656565]"><%= variant.attributes&.dig('size') || '-' %></td>
+                <td class="px-4 py-3 text-sm text-[#656565]"><%= variant.attributes&.dig('color') || '-' %></td>
+                <td class="px-4 py-3 text-sm font-mono text-[#656565]"><%= variant.sku || '-' %></td>
+                <td class="px-4 py-3 text-sm font-bold text-[#0053E2]">
+                  <%= variant.price_override ? "₮#{number_with_delimiter(variant.price_override)}" : '-' %>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold <%= variant.inventory&.quantity.to_i > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' %>">
+                    <%= variant.inventory&.quantity || 0 %>
+                  </span>
+                </td>
+                <td class="px-4 py-3">
+                  <% if variant.is_active %>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800">Active</span>
+                  <% else %>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-800">Inactive</span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <button onclick="editVariant(<%= variant.id %>)" class="inline-flex items-center justify-center w-8 h-8 rounded-[8px] bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    </svg>
+                  </button>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="8" class="px-4 py-8 text-center text-[#989898]">
+                No variants yet. Click "Add Variant" to create one.
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 4️⃣ Pricing Rules Card (Placeholder) -->
+  <div class="bg-white rounded-[16px] shadow-md p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-black text-[#0053E2] flex items-center gap-2">
+        <%= heroicon('calculator', class: 'w-6 h-6') %>
+        Pricing Rules
+      </h2>
+      <button type="button" class="inline-flex items-center gap-2 bg-[#FFC220] text-[#0053E2] font-bold px-4 py-2 rounded-[16px] hover:bg-[#FFD666] transition-colors" disabled>
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        Add Pricing Rule
+      </button>
+    </div>
+    
+    <div class="text-center py-8 text-[#989898]">
+      <p class="font-semibold">Pricing Rules feature coming soon...</p>
+      <p class="text-sm mt-2">You'll be able to create conditional discounts here.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Variant Modal -->
+<div id="variant-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-[16px] shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-6 border-b border-gray-200">
+      <h3 class="text-2xl font-black text-[#0053E2]" id="modal-title">Add Variant</h3>
+    </div>
+    
+    <%= form_with model: [:admin, @product], url: admin_product_path(@product), method: :patch, local: true, id: "variant-form", class: "p-6" do |f| %>
+      <%= f.fields_for :sellable_attributes, @product.sellable do |sellable_fields| %>
+        <%= sellable_fields.hidden_field :id %>
+        <div id="variant-fields-container">
+          <!-- Dynamic variant fields will be inserted here -->
+        </div>
+      <% end %>
+      
+      <div class="flex items-center justify-end gap-4 pt-4 border-t">
+        <button type="button" onclick="closeVariantModal()" class="px-6 py-3 bg-gray-200 text-[#656565] font-bold rounded-[16px] hover:bg-gray-300 transition-colors">
+          Cancel
+        </button>
+        <%= f.submit "Save Variant", class: "px-6 py-3 bg-[#0053E2] text-white font-bold rounded-[16px] hover:bg-[#003299] transition-colors cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+function openVariantModal(variantId = null) {
+  const modal = document.getElementById('variant-modal');
+  const title = document.getElementById('modal-title');
+  const container = document.getElementById('variant-fields-container');
+  const timestamp = new Date().getTime();
+  
+  title.textContent = variantId ? 'Edit Variant' : 'Add Variant';
+  
+  // Clear container
+  container.innerHTML = '';
+  
+  // Add variant fields
+  const html = `
+    <div class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-bold text-[#656565] mb-2">Variant Name</label>
+          <input type="text" name="product[sellable_attributes][sellable_variants_attributes][${timestamp}][variant_name]" class="w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2]" placeholder="e.g., S-Хар" required>
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-[#656565] mb-2">SKU</label>
+          <input type="text" name="product[sellable_attributes][sellable_variants_attributes][${timestamp}][sku]" class="w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2]" placeholder="PROD-001">
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-bold text-[#656565] mb-2">Size</label>
+          <input type="text" name="product[sellable_attributes][sellable_variants_attributes][${timestamp}][attributes][size]" class="w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2]" placeholder="S, M, L, XL">
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-[#656565] mb-2">Color</label>
+          <input type="text" name="product[sellable_attributes][sellable_variants_attributes][${timestamp}][attributes][color]" class="w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2]" placeholder="Улаан, Хар">
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-[#656565] mb-2">Material</label>
+          <input type="text" name="product[sellable_attributes][sellable_variants_attributes][${timestamp}][attributes][material]" class="w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2]" placeholder="Optional">
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label class="block text-sm font-bold text-[#656565] mb-2">Price Override (₮)</label>
+          <input type="number" step="0.01" name="product[sellable_attributes][sellable_variants_attributes][${timestamp}][price_override]" class="w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2]" placeholder="Optional">
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-[#656565] mb-2">Stock Quantity</label>
+          <input type="number" name="product[sellable_attributes][sellable_variants_attributes][${timestamp}][inventory_attributes][quantity]" class="w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2]" value="0" required>
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-[#656565] mb-2">Status</label>
+          <div class="flex items-center gap-3 h-[50px]">
+            <input type="checkbox" name="product[sellable_attributes][sellable_variants_attributes][${timestamp}][is_active]" value="1" checked class="w-6 h-6 text-[#0053E2] rounded focus:ring-[#0053E2]">
+            <span class="text-sm font-semibold text-[#656565]">Active</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  container.innerHTML = html;
+  modal.classList.remove('hidden');
+}
+
+function closeVariantModal() {
+  document.getElementById('variant-modal').classList.add('hidden');
+}
+
+function editVariant(variantId) {
+  // TODO: Load variant data and populate modal
+  alert('Edit variant #' + variantId + ' - Implementation coming soon');
+}
+
+// Close modal on outside click
+document.getElementById('variant-modal')?.addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeVariantModal();
+  }
+});
+</script>
+    <%= link_to admin_products_path, class: "inline-flex items-center gap-2 text-[#656565] font-bold hover:text-[#0053E2] transition-colors" do %>
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      Back to Products
+    <% end %>
+  </div>
+
+  <!-- Form -->
+  <div class="bg-white rounded-[16px] shadow-md p-8">
+    <%= form_with model: [:admin, @product], local: true, class: "space-y-6" do |f| %>
+      <!-- Error Messages -->
+      <% if @product.errors.any? %>
+        <div class="bg-red-50 border border-red-200 rounded-[16px] p-4">
+          <h3 class="text-red-800 font-bold mb-2"><%= pluralize(@product.errors.count, "error") %> prohibited this product from being saved:</h3>
+          <ul class="list-disc list-inside text-red-700 text-sm">
+            <% @product.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <!-- Product Basic Info -->
+      <div class="border-b border-gray-200 pb-6">
+        <h3 class="text-lg font-black text-[#0053E2] mb-4">Basic Information</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Product Name -->
+          <%= f.fields_for :sellable_attributes, @product.sellable do |sellable_fields| %>
+            <%= sellable_fields.hidden_field :id %>
+            <div class="md:col-span-2">
+              <%= sellable_fields.label :name, "Product Name", class: "block text-sm font-bold text-[#656565] mb-2" %>
+              <%= sellable_fields.text_field :name, class: "w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] focus:border-transparent", placeholder: "Enter product name" %>
+            </div>
+
+            <!-- Base Price -->
+            <div>
+              <%= sellable_fields.label :base_price, "Base Price (₮)", class: "block text-sm font-bold text-[#656565] mb-2" %>
+              <%= sellable_fields.number_field :base_price, step: 0.01, class: "w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] focus:border-transparent", placeholder: "0.00" %>
+            </div>
+
+            <!-- Status -->
+            <div>
+              <%= sellable_fields.label :is_active, "Status", class: "block text-sm font-bold text-[#656565] mb-2" %>
+              <%= sellable_fields.select :is_active, 
+                  options_for_select([['Active', true], ['Inactive', false]], @product.sellable.is_active),
+                  {},
+                  class: "w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] focus:border-transparent" %>
+            </div>
+
+            <!-- Description -->
+            <div class="md:col-span-2">
+              <%= sellable_fields.label :description, "Description", class: "block text-sm font-bold text-[#656565] mb-2" %>
+              <%= sellable_fields.text_area :description, rows: 4, class: "w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] focus:border-transparent", placeholder: "Enter product description" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Category & Brand -->
+      <div class="border-b border-gray-200 pb-6">
+        <h3 class="text-lg font-black text-[#0053E2] mb-4">Classification</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Category -->
+          <div>
+            <%= f.label :category_id, "Category", class: "block text-sm font-bold text-[#656565] mb-2" %>
+            <%= f.select :category_id,
+                options_for_select(@categories.map { |c| [c.name, c.id] }, @product.category_id),
+                { prompt: 'Select a category' },
+                class: "w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] focus:border-transparent" %>
+          </div>
+
+          <!-- Brand -->
+          <div>
+            <%= f.label :brand_id, "Brand", class: "block text-sm font-bold text-[#656565] mb-2" %>
+            <%= f.select :brand_id,
+                options_for_select(@brands.map { |b| [b.name, b.id] }, @product.brand_id),
+                { prompt: 'Select a brand' },
+                class: "w-full px-4 py-3 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] focus:border-transparent" %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Product Variants -->
+      <%= f.fields_for :sellable_attributes, @product.sellable do |sellable_fields| %>
+        <div class="border-b border-gray-200 pb-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-black text-[#0053E2]">Product Variants</h3>
+            <button type="button" onclick="addVariant()" class="inline-flex items-center gap-2 bg-[#FFC220] text-[#0053E2] font-bold px-4 py-2 rounded-[8px] hover:bg-[#FFD666] transition-colors text-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              Add Variant
+            </button>
+          </div>
+
+          <div id="variants-container" class="space-y-4">
+            <%= sellable_fields.fields_for :sellable_variants_attributes do |variant_fields| %>
+              <div class="variant-item bg-gray-50 border border-gray-200 rounded-[8px] p-4">
+                <%= variant_fields.hidden_field :id %>
+                
+                <!-- Main Variant Info -->
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-3">
+                  <div>
+                    <%= variant_fields.label :variant_name, "Variant Name", class: "block text-xs font-bold text-[#656565] mb-1" %>
+                    <%= variant_fields.text_field :variant_name, class: "w-full px-3 py-2 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] text-sm", placeholder: "e.g., Red-Large" %>
+                  </div>
+                  <div>
+                    <%= variant_fields.label :sku, "SKU", class: "block text-xs font-bold text-[#656565] mb-1" %>
+                    <%= variant_fields.text_field :sku, class: "w-full px-3 py-2 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] text-sm", placeholder: "SKU-001" %>
+                  </div>
+                  <div>
+                    <%= variant_fields.label :price_override, "Price (₮)", class: "block text-xs font-bold text-[#656565] mb-1" %>
+                    <%= variant_fields.number_field :price_override, step: 0.01, class: "w-full px-3 py-2 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] text-sm", placeholder: "Optional" %>
+                  </div>
+                  <div>
+                    <%= variant_fields.fields_for :inventory_attributes, (variant_fields.object&.inventory || variant_fields.object&.build_inventory || SellableVariant.new.build_inventory) do |inv_fields| %>
+                      <%= inv_fields.hidden_field :id %>
+                      <%= inv_fields.label :quantity, "Stock Qty", class: "block text-xs font-bold text-[#656565] mb-1" %>
+                      <%= inv_fields.number_field :quantity, class: "w-full px-3 py-2 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] text-sm", placeholder: "0" %>
+                    <% end %>
+                  </div>
+                  <div class="flex items-end gap-2">
+                    <div class="flex-1">
+                      <%= variant_fields.label :is_active, "Active", class: "block text-xs font-bold text-[#656565] mb-1" %>
+                      <%= variant_fields.check_box :is_active, class: "w-4 h-4 text-[#0053E2] rounded focus:ring-[#0053E2]" %>
+                    </div>
+                    <%= variant_fields.check_box :_destroy, class: "hidden" %>
+                    <button type="button" onclick="removeVariant(this)" class="px-3 py-2 bg-red-100 text-red-600 rounded-[8px] hover:bg-red-200 transition-colors text-sm font-bold">
+                      Remove
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Variant Options (Color, Size, etc.) -->
+                <div class="border-t border-gray-300 pt-3">
+                  <div class="text-xs font-bold text-[#656565] mb-2">Variant Options (Өнгө, Хэмжээ гэх мэт)</div>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <% 
+                      attrs = variant_fields.object&.attributes || {}
+                      option_keys = attrs.is_a?(Hash) ? attrs.keys : []
+                    %>
+                    
+                    <div>
+                      <label class="block text-xs font-semibold text-[#656565] mb-1">Өнгө (Color)</label>
+                      <input type="text" name="product[sellable_attributes][sellable_variants_attributes][<%= variant_fields.object&.id || 'new' %>][attributes][color]" value="<%= attrs['color'] %>" class="w-full px-3 py-2 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] text-sm" placeholder="жнь: Улаан, Хар">
+                    </div>
+                    
+                    <div>
+                      <label class="block text-xs font-semibold text-[#656565] mb-1">Хэмжээ (Size)</label>
+                      <input type="text" name="product[sellable_attributes][sellable_variants_attributes][<%= variant_fields.object&.id || 'new' %>][attributes][size]" value="<%= attrs['size'] %>" class="w-full px-3 py-2 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] text-sm" placeholder="жнь: S, M, L, XL">
+                    </div>
+                    
+                    <div>
+                      <label class="block text-xs font-semibold text-[#656565] mb-1">Материал (Material)</label>
+                      <input type="text" name="product[sellable_attributes][sellable_variants_attributes][<%= variant_fields.object&.id || 'new' %>][attributes][material]" value="<%= attrs['material'] %>" class="w-full px-3 py-2 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] text-sm" placeholder="жнь: Арьс, Даавуу">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <!-- Specifications -->
+        <% if @product.category.present? && @product.category.category_attributes.any? %>
+          <div class="border-b border-gray-200 pb-6">
+            <h3 class="text-lg font-black text-[#0053E2] mb-4">Specifications</h3>
+            
+            <div class="space-y-4">
+              <%= sellable_fields.fields_for :specifications_attributes do |spec_fields| %>
+                <div class="specification-item grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                  <%= spec_fields.hidden_field :id %>
+                  <div class="md:col-span-2">
+                    <%= spec_fields.label :category_attribute_id, "Attribute", class: "block text-xs font-bold text-[#656565] mb-1" %>
+                    <%= spec_fields.select :category_attribute_id,
+                        options_for_select(@product.category.category_attributes.map { |attr| [attr.name, attr.id] }, spec_fields.object&.category_attribute_id),
+                        { prompt: 'Select attribute' },
+                        class: "w-full px-3 py-2 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] text-sm" %>
+                  </div>
+                  <div>
+                    <%= spec_fields.label :value, "Value", class: "block text-xs font-bold text-[#656565] mb-1" %>
+                    <%= spec_fields.text_field :value, class: "w-full px-3 py-2 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] text-sm", placeholder: "Enter value" %>
+                  </div>
+                  <%= spec_fields.check_box :_destroy, class: "hidden" %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+
+      <!-- Form Actions -->
+      <div class="flex items-center justify-end gap-4 pt-4">
+        <%= link_to "Cancel", admin_products_path, class: "px-6 py-3 bg-gray-200 text-[#656565] font-bold rounded-[16px] hover:bg-gray-300 transition-colors" %>
+        <%= f.submit "Update Product", class: "px-6 py-3 bg-[#0053E2] text-white font-bold rounded-[16px] hover:bg-[#003299] transition-colors shadow-md hover:shadow-lg cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+function addVariant() {
+  const container = document.getElementById('variants-container');
+  const timestamp = new Date().getTime();
+  const variantHtml = `
+    <div class="variant-item bg-gray-50 border border-gray-200 rounded-[8px] p-4">
+      <!-- Main Variant Info -->
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-3">
+        <div>
+          <label class="block text-xs font-bold text-[#656565] mb-1">Variant Name</label>
+          <input type="text" name="product[sellable_attributes][sellable_variants_attributes][${timestamp}][variant_name]" class="w-full px-3 py-2 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] text-sm" placeholder="e.g., Red-Large">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-[#656565] mb-1">SKU</label>
+          <input type="text" name="product[sellable_attributes][sellable_variants_attributes][${timestamp}][sku]" class="w-full px-3 py-2 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] text-sm" placeholder="SKU-001">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-[#656565] mb-1">Price (₮)</label>
+          <input type="number" step="0.01" name="product[sellable_attributes][sellable_variants_attributes][${timestamp}][price_override]" class="w-full px-3 py-2 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] text-sm" placeholder="Optional">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-[#656565] mb-1">Stock Qty</label>
+          <input type="number" name="product[sellable_attributes][sellable_variants_attributes][${timestamp}][inventory_attributes][quantity]" class="w-full px-3 py-2 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] text-sm" placeholder="0" value="0">
+        </div>
+        <div class="flex items-end gap-2">
+          <div class="flex-1">
+            <label class="block text-xs font-bold text-[#656565] mb-1">Active</label>
+            <input type="checkbox" name="product[sellable_attributes][sellable_variants_attributes][${timestamp}][is_active]" value="1" checked class="w-4 h-4 text-[#0053E2] rounded focus:ring-[#0053E2]">
+          </div>
+          <button type="button" onclick="removeVariant(this)" class="px-3 py-2 bg-red-100 text-red-600 rounded-[8px] hover:bg-red-200 transition-colors text-sm font-bold">
+            Remove
+          </button>
+        </div>
+      </div>
+      
+      <!-- Variant Options -->
+      <div class="border-t border-gray-300 pt-3">
+        <div class="text-xs font-bold text-[#656565] mb-2">Variant Options (Өнгө, Хэмжээ гэх мэт)</div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-[#656565] mb-1">Өнгө (Color)</label>
+            <input type="text" name="product[sellable_attributes][sellable_variants_attributes][${timestamp}][attributes][color]" class="w-full px-3 py-2 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] text-sm" placeholder="жнь: Улаан, Хар">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#656565] mb-1">Хэмжээ (Size)</label>
+            <input type="text" name="product[sellable_attributes][sellable_variants_attributes][${timestamp}][attributes][size]" class="w-full px-3 py-2 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] text-sm" placeholder="жнь: S, M, L, XL">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-[#656565] mb-1">Материал (Material)</label>
+            <input type="text" name="product[sellable_attributes][sellable_variants_attributes][${timestamp}][attributes][material]" class="w-full px-3 py-2 border border-gray-300 rounded-[8px] focus:outline-none focus:ring-2 focus:ring-[#0053E2] text-sm" placeholder="жнь: Арьс, Даавуу">
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  container.insertAdjacentHTML('beforeend', variantHtml);
+}
+
+function removeVariant(button) {
+  const variantItem = button.closest('.variant-item');
+  const destroyInput = variantItem.querySelector('input[name*="_destroy"]');
+  
+  if (destroyInput) {
+    // Existing variant - mark for destruction
+    destroyInput.value = '1';
+    variantItem.style.display = 'none';
+  } else {
+    // New variant - just remove from DOM
+    variantItem.remove();
+  }
+}
+</script>

@@ -211,6 +211,7 @@
 </div>
 
 <script>
+function initializeProductVariants() {
   // Quantity controls
   const decreaseBtn = document.getElementById('decrease-qty');
   const increaseBtn = document.getElementById('increase-qty');
@@ -218,6 +219,8 @@
   const subtotalEl = document.getElementById('subtotal');
   const cartQuantityInput = document.getElementById('cart_quantity');
   const basePrice = <%= @product.sellable.base_price %>;
+  
+  if (!decreaseBtn || !increaseBtn) return; // Already initialized or elements not found
   
   let quantity = 1;
   
@@ -411,5 +414,9 @@
   });
   
   Object.values(attributeGroups).forEach(btn => btn.click());
+}
 
+// Initialize on page load and Turbo navigation
+document.addEventListener('turbo:load', initializeProductVariants);
+document.addEventListener('DOMContentLoaded', initializeProductVariants);
 </script>

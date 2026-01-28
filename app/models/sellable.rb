@@ -9,6 +9,11 @@ class Sellable < ApplicationRecord
   has_many :pricing_rules, dependent: :destroy
   has_many :subscription_plans, dependent: :destroy
   has_many :specifications, dependent: :destroy
+  
+  # Nested attributes
+  accepts_nested_attributes_for :sellable_variants, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :specifications, allow_destroy: true, reject_if: :all_blank
+  accepts_nested_attributes_for :pricing_rules, allow_destroy: true, reject_if: :all_blank
   has_many :category_attributes, through: :specifications
   has_many :cart_items, dependent: :restrict_with_error
   has_many :order_items, dependent: :restrict_with_error

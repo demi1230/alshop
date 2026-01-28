@@ -29,16 +29,45 @@ class CartItemsController < ApplicationController
       variant = SellableVariant.find(variant_id)
     end
     
-    @cart_item = @cart.cart_items.find_or_initialize_by(
-      sellable_variant_id: variant.id,
-      sellable_id: variant.sellable_id
-    )
+    # Parse service config if provided
+    service_config = params[:cart_item][:service_config].present? ? JSON.parse(params[:cart_item][:service_config]) : nil
     
-    if @cart_item.new_record?
-      @cart_item.quantity = cart_item_params[:quantity] || 1
-      @cart_item.configuration = cart_item_params[:configuration]
+    # For services with configuration, find exact match including configuration
+    # For products or services without config, find by variant only
+    if variant.sellable.sellable_type == 'Service' && service_config.present?
+      # Find cart item with exact same configuration
+      @cart_item = @cart.cart_items.find do |item|
+        item.sellable_variant_id == variant.id && 
+        item.sellable_id == variant.sellable_id &&
+        item.configuration == service_config
+      end
+      
+      # If no exact match found, create new cart item
+      if @cart_item
+        @cart_item.quantity += (cart_item_params[:quantity] || 1).to_i
+      else
+        @cart_item = @cart.cart_items.build(
+          sellable_variant_id: variant.id,
+          sellable_id: variant.sellable_id,
+          quantity: cart_item_params[:quantity] || 1,
+          configuration: service_config
+        )
+      end
     else
-      @cart_item.quantity += (cart_item_params[:quantity] || 1).to_i
+      # For products or services without config, use standard find_or_initialize
+      @cart_item = @cart.cart_items.find_or_initialize_by(
+        sellable_variant_id: variant.id,
+        sellable_id: variant.sellable_id
+      )
+      
+      if @cart_item.new_record?
+        @cart_item.quantity = cart_item_params[:quantity] || 1
+        @cart_item.configuration = service_config || cart_item_params[:configuration]
+      else
+        @cart_item.quantity += (cart_item_params[:quantity] || 1).to_i
+        # Update configuration if provided
+        @cart_item.configuration = service_config if service_config.present?
+      end
     end
 
     if @cart_item.save
@@ -91,7 +120,7 @@ class CartItemsController < ApplicationController
   end
 
   def cart_item_params
-    params.require(:cart_item).permit(:sellable_variant_id, :quantity, configuration: {})
+    params.require(:cart_item).permit(:sellable_variant_id, :sellable_id, :quantity, :service_config, configuration: {})
   end
 
   def cart_item_json(item)

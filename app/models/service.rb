@@ -6,8 +6,11 @@ class Service < ApplicationRecord
   belongs_to :category, optional: true
   has_many :service_config_specs, dependent: :destroy
 
+  # Nested attributes
+  accepts_nested_attributes_for :sellable
+
   # Delegations
-  delegate :name, :base_price, :is_active, :sellable_variants, :pricing_rules, to: :sellable
+  delegate :name, :base_price, :is_active, :sellable_variants, :pricing_rules, :specifications, to: :sellable
 
   # Validations
   validates :service_type, presence: true, inclusion: { in: %w[hourly fixed subscription] }

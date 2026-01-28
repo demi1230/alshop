@@ -47,8 +47,9 @@ class ServicesController < ApplicationController
   end
 
   def show
-    @service = Service.includes(:sellable, :category).find(params[:id])
+    @service = Service.includes(:sellable, :category, :service_config_specs).find(params[:id])
     @sellable = @service.sellable
+    @subscription_plans = @sellable.subscription_plans.includes(:company) if @service.subscription?
   end
 
   private

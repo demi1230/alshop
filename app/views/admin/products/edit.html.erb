@@ -1,0 +1,731 @@
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-lg font-semibold text-[#0053E2]"><%= @product.name %></h1>
+      <p class="text-gray-500 text-sm mt-1">Edit Product</p>
+    </div>
+    <%= link_to admin_products_path, class: "inline-flex items-center gap-2 text-gray-700 font-medium hover:text-gray-900 transition-colors" do %>
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      Back to Products
+    <% end %>
+  </div>
+
+  <!-- 1️⃣ Product Info Card -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-lg font-semibold text-[#0053E2] mb-4 flex items-center gap-2">
+      <%= heroicon('cube', class: 'w-6 h-6') %>
+      Product Info
+    </h2>
+    
+    <%= form_with model: [:admin, @product], local: true, class: "space-y-4" do |f| %>
+      <%= f.fields_for :sellable_attributes, @product.sellable do |sellable_fields| %>
+        <%= sellable_fields.hidden_field :id %>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Name -->
+          <div class="md:col-span-2">
+            <%= sellable_fields.label :name, "Бүтээгдэхүүний нэр", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= sellable_fields.text_field :name, class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+          </div>
+
+          <!-- Description -->
+          <div class="md:col-span-2">
+            <%= sellable_fields.label :description, "Тайлбар", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= sellable_fields.text_area :description, rows: 4, class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+          </div>
+
+          <!-- Category -->
+          <div>
+            <%= f.label :category_id, "Ангилал", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= f.select :category_id,
+                hierarchical_category_options(@categories, @product.category_id),
+                { prompt: 'Ангилал сонгох' },
+                class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+            <p class="text-sm text-gray-500 mt-1"> Зөвхөн дэд ангилалгүй (leaf) ангиллыг сонгох боломжтой</p>
+          </div>
+
+          <!-- Brand -->
+          <div>
+            <%= f.label :brand_id, "Брэнд", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= f.select :brand_id,
+                options_for_select(@brands.map { |b| [b.name, b.id] }, @product.brand_id),
+                { prompt: 'Брэнд сонгох' },
+                class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+          </div>
+
+          <!-- Base Price -->
+          <div>
+            <%= sellable_fields.label :base_price, "Үндсэн үнэ (₮)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <%= sellable_fields.number_field :base_price, step: 0.01, class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+          </div>
+
+          <!-- Status -->
+          <div>
+            <%= sellable_fields.label :is_active, "Төлөв", class: "block text-sm font-medium text-gray-700 mb-2" %>
+            <div class="flex items-center gap-3 h-[50px]">
+              <%= sellable_fields.check_box :is_active, class: "w-6 h-6 text-gray-900 rounded focus:ring-[#0053E2]" %>
+              <span class="text-sm font-semibold text-gray-700">Идэвхтэй</span>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="flex justify-end pt-4 border-t">
+        <%= f.submit "Бүтээгдэхүүний мэдээлэл хадгалах", class: "px-2 py-2 bg-[#0053E2] text-white font-medium rounded-lg hover:bg-[#004CC9] transition-colors cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 2️⃣ Specifications Card -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-lg font-semibold text-[#0053E2] mb-4 flex items-center gap-2">
+      <%= heroicon('document-text', class: 'w-6 h-6') %>
+      Specifications
+      <span class="text-sm font-normal text-gray-500 ml-2">(Техникийн мэдээлэл)</span>
+    </h2>
+    
+    <% if @product.category.blank? %>
+      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <p class="text-sm text-yellow-800">
+           Спецификаци нэмэхийн тулд эхлээд <strong>Ангилал</strong> сонгоно уу.
+        </p>
+      </div>
+    <% elsif @product.category.category_attributes.empty? %>
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p class="text-sm text-blue-800 mb-2">
+           <strong><%= @product.category.name %></strong> ангилалд спецификаци тодорхойлогдоогүй байна
+        </p>
+        <%= link_to admin_category_category_attributes_path(@product.category), 
+            class: "inline-flex items-center gap-2 text-gray-900 font-medium hover:text-[#004CC9] text-sm",
+            target: "_blank" do %>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          Ангиллын атрибут нэмэх
+        <% end %>
+      </div>
+    <% else %>
+      <%= form_with model: [:admin, @product], url: admin_product_path(@product), method: :patch, local: true do |f| %>
+        <%= f.fields_for :sellable_attributes, @product.sellable do |sellable_fields| %>
+          <%= sellable_fields.hidden_field :id %>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <% @product.category.category_attributes.order(:name).each_with_index do |category_attr, index| %>
+              <% spec = @product.sellable.specifications.find_or_initialize_by(category_attribute_id: category_attr.id) %>
+              <%= sellable_fields.fields_for :specifications_attributes, spec, index: index do |spec_fields| %>
+                <%= spec_fields.hidden_field :id unless spec.new_record? %>
+                <%= spec_fields.hidden_field :category_attribute_id, value: category_attr.id %>
+                <div>
+                  <div class="flex items-center gap-2 mb-2">
+                    <%= spec_fields.label :value, category_attr.name, class: "block text-sm font-medium text-gray-700" %>
+                    <% if category_attr.is_required %>
+                      <span class="text-xs text-red-600 font-semibold">*</span>
+                    <% end %>
+                  </div>
+                  <%= spec_fields.text_field :value, 
+                      class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]",
+                      placeholder: category_attr.is_required ? "Заавал бөглөх" : "Заавал биш" %>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+
+          <div class="flex justify-end pt-4 border-t mt-4">
+            <%= f.submit "Specification хадгалах", class: "px-2 py-2 bg-[#0053E2] text-white font-medium rounded-lg hover:bg-[#004CC9] transition-colors cursor-pointer" %>
+          </div>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- 3️⃣ Variant Dimensions Card -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-lg font-semibold text-[#0053E2] mb-4 flex items-center gap-2">
+      <%= heroicon('squares-2x2', class: 'w-6 h-6') %>
+      Variant Dimensions
+    </h2>
+    
+    <p class="text-sm text-gray-500 mb-4">
+      Бүтээгдэхүүний хэмжээсийг (жнь: Хэмжээ, Өнгө) болон тэдгээрийн утгуудыг тодорхойлно уу. Эдгээрийг ашиглан variant хослол үүсгэгдэнэ.
+    </p>
+
+    <%= form_with model: [:admin, @product], url: admin_product_path(@product), method: :patch, local: true do |f| %>
+      <div id="dimensions-container" class="space-y-4 mb-4">
+        <% dimensions = @product.variant_dimensions || {} %>
+        <% dimensions.each_with_index do |(name, values), index| %>
+          <div class="dimension-card border border-gray-300 rounded-lg p-4" data-dimension-index="<%= index %>">
+            <div class="flex items-start gap-4">
+              <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Dimension Name</label>
+                <input type="text" 
+                       name="product[variant_dimensions_json][<%= index %>][name]" 
+                       value="<%= name %>"
+                       class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]"
+                       placeholder="e.g., Хэмжээ, Өнгө">
+              </div>
+              <button type="button" 
+                      onclick="removeDimension(this)" 
+                      class="mt-7 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            
+            <div class="mt-3">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Утгууд</label>
+              <div class="dimension-values flex flex-wrap gap-2 mb-2">
+                <% values.each do |value| %>
+                  <div class="dimension-value-tag inline-flex items-center gap-2 px-3 py-1.5 bg-gray-50 text-gray-900 font-semibold rounded-full text-sm">
+                    <span><%= value %></span>
+                    <input type="hidden" name="product[variant_dimensions_json][<%= index %>][values][]" value="<%= value %>">
+                    <button type="button" onclick="removeValue(this)" class="hover:text-red-600">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                  </div>
+                <% end %>
+              </div>
+              <div class="flex gap-2">
+                <input type="text" 
+                       class="value-input flex-1 px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" 
+                       placeholder="Утга бичээд Enter дарна уу"
+                       onkeypress="handleValueKeypress(event, this)">
+                <button type="button" 
+                        onclick="addValue(this)" 
+                        class="px-2 py-2 bg-[#FFC220] text-gray-900 font-medium rounded-lg hover:bg-[#FFD666] transition-colors">
+                  Нэмэх
+                </button>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="flex items-center justify-between pt-4 border-t">
+        <button type="button" 
+                onclick="addDimension()" 
+                class="inline-flex items-center gap-2 px-2 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          Add Dimension
+        </button>
+        <%= f.submit "Dimensions хадгалах", class: "px-2 py-2 bg-[#0053E2] text-white font-medium rounded-lg hover:bg-[#004CC9] transition-colors cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- 4️⃣ Variant Combinations & Inventory Card -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-[#0053E2] flex items-center gap-2">
+        <%= heroicon('table-cells', class: 'w-6 h-6') %>
+        Variant Combinations & Inventory
+      </h2>
+      <% if @product.variant_dimensions.present? && @product.variant_dimensions.any? %>
+        <% total_combinations = @product.generate_variant_combinations.size %>
+        <%= button_to "Combination үүсгэх (#{total_combinations})", 
+            generate_combinations_admin_product_path(@product), 
+            method: :post,
+            class: "inline-flex items-center gap-2 bg-[#FFC220] text-gray-900 font-medium px-4 py-2 rounded-lg hover:bg-[#FFD666] transition-colors" %>
+      <% end %>
+    </div>
+
+    <% if @product.sellable.sellable_variants.any? %>
+      <!-- Variants Table -->
+      <%= form_with model: [:admin, @product], url: update_variants_admin_product_path(@product), method: :patch, local: true do |f| %>
+        <% if @product.variant_dimensions.present? && @product.variant_dimensions.any? %>
+          <div class="mb-3 flex items-center justify-end gap-2">
+            <button type="button" 
+                    onclick="autoGenerateAllSKUs()" 
+                    class="inline-flex items-center gap-2 px-2 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              Бүх SKU автоматаар үүсгэх
+            </button>
+          </div>
+        <% end %>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">
+                  <input type="checkbox" class="w-4 h-4" onclick="toggleAllVariants(this)">
+                </th>
+                <% if @product.dimension_names.any? %>
+                  <% @product.dimension_names.each do |dim_name| %>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase"><%= dim_name %></th>
+                  <% end %>
+                <% else %>
+                  <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Вариант нэр</th>
+                <% end %>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">SKU</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Үнийн өөрчлөлт</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Нөөц</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Идэвхтэй</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <%= f.fields_for :sellable_attributes, @product.sellable do |sellable_fields| %>
+                <%= sellable_fields.hidden_field :id %>
+                <% @product.sellable.sellable_variants.each_with_index do |variant, index| %>
+                  <%= sellable_fields.fields_for :sellable_variants_attributes, variant, index: index do |variant_fields| %>
+                    <%= variant_fields.hidden_field :id %>
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-4 py-3">
+                        <input type="checkbox" class="variant-checkbox w-4 h-4">
+                      </td>
+                      <% if @product.dimension_names.any? %>
+                        <% @product.dimension_names.each do |dim_name| %>
+                          <td class="px-4 py-3 text-sm font-semibold text-gray-700">
+                            <%= variant.attributes&.dig(dim_name) || '-' %>
+                          </td>
+                        <% end %>
+                      <% else %>
+                        <td class="px-4 py-3 text-sm font-semibold text-gray-700">
+                          <%= variant.variant_name %>
+                        </td>
+                      <% end %>
+                      <td class="px-4 py-3">
+                        <%= variant_fields.text_field :sku, class: "w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+                      </td>
+                      <td class="px-4 py-3">
+                        <%= variant_fields.number_field :price_override, step: 0.01, class: "w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]", placeholder: "Optional" %>
+                      </td>
+                      <td class="px-4 py-3">
+                        <%= variant_fields.fields_for :inventory_attributes, (variant.inventory || variant.build_inventory) do |inv_fields| %>
+                          <%= inv_fields.hidden_field :id unless inv_fields.object.new_record? %>
+                          <%= inv_fields.number_field :quantity, class: "w-20 px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+                        <% end %>
+                      </td>
+                      <td class="px-4 py-3 text-center">
+                        <%= variant_fields.check_box :is_active, class: "w-4 h-4 text-gray-900 rounded focus:ring-[#0053E2]" %>
+                      </td>
+                    </tr>
+                  <% end %>
+                <% end %>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex justify-end pt-4 border-t mt-4">
+          <%= f.submit "Бүх variant хадгалах", class: "px-2 py-2 bg-[#0053E2] text-white font-medium rounded-lg hover:bg-[#004CC9] transition-colors cursor-pointer" %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <!-- 5️⃣ Pricing Rules Card -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-[#0053E2] flex items-center gap-2">
+        <%= heroicon('calculator', class: 'w-6 h-6') %>
+        Pricing Rules
+        <span class="text-sm font-normal text-gray-500 ml-2">(Үнийн хөнгөлөлт)</span>
+      </h2>
+    </div>
+    
+    <%= form_with model: [:admin, @product], url: admin_product_path(@product), method: :patch, local: true do |f| %>
+      <%= f.fields_for :sellable_attributes, @product.sellable do |sellable_fields| %>
+        <%= sellable_fields.hidden_field :id %>
+        
+        <div id="pricing-rules-container" class="space-y-4 mb-4">
+          <% @product.sellable.pricing_rules.each_with_index do |rule, index| %>
+            <div class="pricing-rule-card border border-gray-200 rounded-lg p-4 bg-gray-50" data-index="<%= index %>">
+              <%= sellable_fields.fields_for :pricing_rules_attributes, rule, index: index do |rule_fields| %>
+                <%= rule_fields.hidden_field :id %>
+                
+                <div class="flex items-start justify-between mb-3">
+                  <h3 class="text-sm font-medium text-gray-700">Rule <%= index + 1 %></h3>
+                  <%= rule_fields.check_box :_destroy, class: "hidden", data: { destroy: true } %>
+                  <button type="button" onclick="removePricingRule(this)" class="text-red-600 hover:text-red-800 text-xs font-bold">
+                    ✕ Remove
+                  </button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <!-- Variant Selector (Optional) -->
+                  <div class="md:col-span-3">
+                    <%= rule_fields.label :sellable_variant_id, "Тодорхой variant-д хэрэглэх (Заавал биш)", class: "block text-xs font-medium text-gray-700 mb-2" %>
+                    <%= rule_fields.select :sellable_variant_id,
+                        options_for_select(
+                          [["All Variants (Product-level)", nil]] + 
+                          @product.sellable.sellable_variants.map { |v| ["#{v.variant_name} (SKU: #{v.sku})", v.id] },
+                          rule.sellable_variant_id
+                        ),
+                        {},
+                        class: "w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+                    <p class="text-sm text-gray-500 mt-1"> 'Бүх Variant' гэж үлдээвэл бүтээгдэхүүн түвшинд хэрэглэгдэнэ</p>
+                  </div>
+                  
+                  <!-- Channel -->
+                  <div>
+                    <%= rule_fields.label :channel, "Суваг", class: "block text-xs font-medium text-gray-700 mb-2" %>
+                    <%= rule_fields.select :channel, 
+                        options_for_select([
+                          ['Нийтийн суваг', 'public_channel'],
+                          ['Байгууллага', 'company'],
+                          ['Дэд байгууллага', 'sub_company'],
+                          ['Түнш', 'partner'],
+                          ['Промо', 'promo']
+                        ], rule.channel),
+                        {},
+                        class: "w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+                  </div>
+                  
+                  <!-- Discount Type -->
+                  <div>
+                    <%= rule_fields.label :discount_type, "Хөнгөлөлтийн төрөл", class: "block text-xs font-medium text-gray-700 mb-2" %>
+                    <%= rule_fields.select :discount_type,
+                        options_for_select([
+                          ['Хувь (%)', 'percentage'],
+                          ['Тогтмол дүн (₮)', 'fixed'],
+                          ['Үнийн дарангуйлалт (₮)', 'override']
+                        ], rule.discount_type),
+                        {},
+                        class: "w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+                  </div>
+                  
+                  <!-- Value -->
+                  <div>
+                    <%= rule_fields.label :value, "Утга", class: "block text-xs font-medium text-gray-700 mb-2" %>
+                    <%= rule_fields.number_field :value, step: 0.01,
+                        class: "w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]",
+                        placeholder: "жнь: 10 эсвэл 5000" %>
+                  </div>
+                  
+                  <!-- Priority -->
+                  <div>
+                    <%= rule_fields.label :priority, "Эрэмбэ", class: "block text-xs font-medium text-gray-700 mb-2" %>
+                    <%= rule_fields.number_field :priority,
+                        class: "w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]",
+                        placeholder: "Их тоо = Эхэлж" %>
+                  </div>
+                  
+                  <!-- Valid From -->
+                  <div>
+                    <%= rule_fields.label :valid_from, "Эхлэх огноо", class: "block text-xs font-medium text-gray-700 mb-2" %>
+                    <%= rule_fields.date_field :valid_from,
+                        class: "w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+                  </div>
+                  
+                  <!-- Valid To -->
+                  <div>
+                    <%= rule_fields.label :valid_to, "Дуусах огноо", class: "block text-xs font-medium text-gray-700 mb-2" %>
+                    <%= rule_fields.date_field :valid_to,
+                        class: "w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+                  </div>
+                  
+                  <!-- Promo Code (conditional) -->
+                  <div class="md:col-span-3">
+                    <%= rule_fields.label :promo_code, "Промо код (Promo сувагт)", class: "block text-xs font-medium text-gray-700 mb-2" %>
+                    <%= rule_fields.text_field :promo_code,
+                        class: "w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]",
+                        placeholder: "Заавал биш - Зөвхөн Promo сувагт" %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+        
+        <div class="flex items-center justify-between pt-4 border-t">
+          <button type="button" onclick="addPricingRule()" class="inline-flex items-center gap-2 bg-[#FFC220] text-gray-900 font-medium px-2 py-2 rounded-lg hover:bg-[#FFD666] transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Үнийн дүрэм нэмэх
+          </button>
+          <%= f.submit "Үнийн дүрэм хадгалах", class: "px-2 py-2 bg-[#0053E2] text-white font-medium rounded-lg hover:bg-[#004CC9] transition-colors cursor-pointer" %>
+        </div>
+      <% end %>
+    <% end %>
+    
+    <!-- Info Box -->
+    <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <p class="text-xs font-medium text-blue-900 mb-2"> Pricing Rules нь:</p>
+      <ul class="text-xs text-blue-800 space-y-1">
+        <li>• <strong>Product-level</strong>: Энэ хуудсан дээрх rule нь бүх variant-д хамаарна</li>
+        <li>• <strong>Variant-level</strong>: Тодорхой variant-д л хөнгөлөлт өгөх (тусдаа удирдана)</li>
+        <li>• <strong>Channel</strong>: Хэнд хөнгөлөлт үзүүлэх (public, company, promo code)</li>
+        <li>• <strong>Discount Type</strong>: Percentage (%), Fixed Amount (₮), Price Override (шинэ үнэ)</li>
+        <li>• <strong>Priority</strong>: Олон rule байвал аль нь түрүүлж ажиллах (их тоо = эхэлж)</li>
+        <li>• <strong>Valid From/To</strong>: Хугацаа тогтоох (optional)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+// Dimension Management Functions
+// Use window to avoid re-declaration errors with Turbo
+if (typeof window.dimensionIndex === 'undefined') {
+  window.dimensionIndex = <%= (@product.variant_dimensions || {}).size %>;
+}
+
+function addDimension() {
+  const container = document.getElementById('dimensions-container');
+  const html = `
+    <div class="dimension-card border border-gray-300 rounded-lg p-4" data-dimension-index="${window.dimensionIndex}">
+      <div class="flex items-start gap-4">
+        <div class="flex-1">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Хэмжээсийн нэр</label>
+          <input type="text" 
+                 name="product[variant_dimensions_json][${window.dimensionIndex}][name]" 
+                 class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]"
+                 placeholder="жнь: Хэмжээ, Өнгө">
+        </div>
+        <button type="button" 
+                onclick="removeDimension(this)" 
+                class="mt-7 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="mt-3">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Утгууд</label>
+        <div class="dimension-values flex flex-wrap gap-2 mb-2"></div>
+        <div class="flex gap-2">
+          <input type="text" 
+                 class="value-input flex-1 px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" 
+                 placeholder="Утга бичээд Enter дарна уу"
+                 onkeypress="handleValueKeypress(event, this)">
+          <button type="button" 
+                  onclick="addValue(this)" 
+                  class="px-2 py-2 bg-[#FFC220] text-gray-900 font-medium rounded-lg hover:bg-[#FFD666] transition-colors">
+            Нэмэх
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+  container.insertAdjacentHTML('beforeend', html);
+  window.dimensionIndex++;
+}
+
+function removeDimension(button) {
+  if (confirm('Remove this dimension? This will affect existing variants.')) {
+    button.closest('.dimension-card').remove();
+  }
+}
+
+function handleValueKeypress(event, input) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    addValue(input.nextElementSibling);
+  }
+}
+
+function addValue(button) {
+  const card = button.closest('.dimension-card');
+  const input = card.querySelector('.value-input');
+  const value = input.value.trim();
+  
+  if (!value) return;
+  
+  const valuesContainer = card.querySelector('.dimension-values');
+  const dimensionIndex = card.dataset.dimensionIndex;
+  
+  const tag = document.createElement('div');
+  tag.className = 'dimension-value-tag inline-flex items-center gap-2 px-3 py-1.5 bg-gray-50 text-gray-900 font-semibold rounded-full text-sm';
+  tag.innerHTML = `
+    <span>${value}</span>
+    <input type="hidden" name="product[variant_dimensions_json][${dimensionIndex}][values][]" value="${value}">
+    <button type="button" onclick="removeValue(this)" class="hover:text-red-600">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+      </svg>
+    </button>
+  `;
+  
+  valuesContainer.appendChild(tag);
+  input.value = '';
+  input.focus();
+}
+
+function removeValue(button) {
+  button.closest('.dimension-value-tag').remove();
+}
+
+function toggleAllVariants(checkbox) {
+  document.querySelectorAll('.variant-checkbox').forEach(cb => {
+    cb.checked = checkbox.checked;
+  });
+}
+
+function autoGenerateAllSKUs() {
+  // Get product name and generate code from first 3-4 letters
+  const productName = '<%= j(@product.name) %>';
+  const productCode = productName
+    .trim()
+    .substring(0, 4)
+    .toUpperCase()
+    .replace(/[^A-Z0-9А-ЯӨҮ]/g, ''); // Keep alphanumeric + Cyrillic
+  
+  let generatedCount = 0;
+  const dimensionCount = <%= @product.dimension_names.size %>;
+  
+  // Process each variant row
+  document.querySelectorAll('tbody tr').forEach(row => {
+    const skuInput = row.querySelector('input[name*="[sku]"]');
+    
+    // Only generate if SKU is empty
+    if (skuInput && !skuInput.value.trim()) {
+      // Extract dimension values from the first N cells after checkbox
+      const allCells = row.querySelectorAll('td');
+      const dimensionValues = [];
+      
+      // Skip first cell (checkbox), then get next dimensionCount cells
+      for (let i = 1; i <= dimensionCount && i < allCells.length; i++) {
+        const value = allCells[i].textContent.trim();
+        if (value && value !== '-') {
+          dimensionValues.push(value);
+        }
+      }
+      
+      // Generate SKU: PRODUCTCODE-DIM1-DIM2-...
+      if (dimensionValues.length > 0) {
+        skuInput.value = `${productCode}-${dimensionValues.join('-')}`;
+        generatedCount++;
+      }
+    }
+  });
+  
+  if (generatedCount > 0) {
+    // Show success message
+    alert(`Generated ${generatedCount} SKU(s). Don't forget to click "Save All Variants" to save changes.`);
+  } else {
+    alert('All SKUs are already filled. Clear SKU fields to regenerate.');
+  }
+}
+
+function addPricingRule() {
+  const container = document.getElementById('pricing-rules-container');
+  const index = container.querySelectorAll('.pricing-rule-card').length;
+  
+  const html = `
+    <div class="pricing-rule-card border border-gray-200 rounded-lg p-4 bg-gray-50" data-index="${index}">
+      <input type="hidden" name="product[sellable_attributes][pricing_rules_attributes][${index}][id]" value="">
+      
+      <div class="flex items-start justify-between mb-3">
+        <h3 class="text-sm font-medium text-gray-700">Үнийн дүрэм ${index + 1}</h3>
+        <input type="hidden" name="product[sellable_attributes][pricing_rules_attributes][${index}][_destroy]" value="false" data-destroy="true">
+        <button type="button" onclick="removePricingRule(this)" class="text-red-600 hover:text-red-800 text-xs font-bold">
+          ✕ Устгах
+        </button>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Variant Selector (Optional) -->
+        <div class="md:col-span-3">
+          <label class="block text-xs font-medium text-gray-700 mb-2">Тодорхой variant-д хэрэглэх (Заавал биш)</label>
+          <select name="product[sellable_attributes][pricing_rules_attributes][${index}][sellable_variant_id]"
+                  class="w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]">
+            <option value="">Бүх Variant (Бүтээгдэхүүн түвшин)</option>
+            <% @product.sellable.sellable_variants.each do |variant| %>
+              <option value="<%= variant.id %>"><%= variant.variant_name %> (SKU: <%= variant.sku %>)</option>
+            <% end %>
+          </select>
+          <p class="text-sm text-gray-500 mt-1"> 'Бүх Variant' гэж үлдээвэл бүтээгдэхүүн түвшинд хэрэглэгдэнэ</p>
+        </div>
+        
+        <!-- Channel -->
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-2">Суваг</label>
+          <select name="product[sellable_attributes][pricing_rules_attributes][${index}][channel]" 
+                  class="w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]">
+            <option value="public_channel">Нийтийн суваг</option>
+            <option value="company">Байгууллага</option>
+            <option value="sub_company">Дэд байгууллага</option>
+            <option value="partner">Түнш</option>
+            <option value="promo">Промо</option>
+          </select>
+        </div>
+        
+        <!-- Discount Type -->
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-2">Хөнгөлөлтийн төрөл</label>
+          <select name="product[sellable_attributes][pricing_rules_attributes][${index}][discount_type]"
+                  class="w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]">
+            <option value="percentage">Хувь (%)</option>
+            <option value="fixed">Тогтмол дүн (₮)</option>
+            <option value="override">Үнийн дарангуйлалт (₮)</option>
+          </select>
+        </div>
+        
+        <!-- Value -->
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-2">Утга</label>
+          <input type="number" step="0.01"
+                 name="product[sellable_attributes][pricing_rules_attributes][${index}][value]"
+                 class="w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]"
+                 placeholder="жнь: 10 эсвэл 5000">
+        </div>
+        
+        <!-- Priority -->
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-2">Эрэмбэ</label>
+          <input type="number"
+                 name="product[sellable_attributes][pricing_rules_attributes][${index}][priority]"
+                 class="w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]"
+                 placeholder="Их тоо = Эхэлж">
+                 value="1">
+        </div>
+        
+        <!-- Valid From -->
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-2">Эхлэх огноо</label>
+          <input type="date"
+                 name="product[sellable_attributes][pricing_rules_attributes][${index}][valid_from]"
+                 class="w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]">
+        </div>
+        
+        <!-- Valid To -->
+        <div>
+          <label class="block text-xs font-medium text-gray-700 mb-2">Дуусах огноо</label>
+          <input type="date"
+                 name="product[sellable_attributes][pricing_rules_attributes][${index}][valid_to]"
+                 class="w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]">
+        </div>
+        
+        <!-- Promo Code -->
+        <div class="md:col-span-3">
+          <label class="block text-xs font-medium text-gray-700 mb-2">Промо код (Promo сувагт)</label>
+          <input type="text"
+                 name="product[sellable_attributes][pricing_rules_attributes][${index}][promo_code]"
+                 class="w-full px-2 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]"
+                 placeholder="Заавал биш - Зөвхөн Promo сувагт">
+        </div>
+      </div>
+    </div>
+  `;
+  
+  container.insertAdjacentHTML('beforeend', html);
+}
+
+function removePricingRule(button) {
+  const card = button.closest('.pricing-rule-card');
+  const idInput = card.querySelector('input[name*="[id]"]');
+  const destroyInput = card.querySelector('input[data-destroy]');
+  
+  if (idInput && idInput.value) {
+    // Existing record - mark for destruction
+    if (destroyInput) {
+      destroyInput.value = '1';
+    }
+    card.style.display = 'none';
+  } else {
+    // New record - just remove from DOM
+    card.remove();
+  }
+}
+</script>

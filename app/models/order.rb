@@ -27,6 +27,10 @@ class Order < ApplicationRecord
   scope :for_user, ->(user) { where(user: user) }
   scope :by_status, ->(status) { where(status: status) if status.present? }
   scope :in_date_range, ->(from, to) { where(created_at: from..to) if from.present? && to.present? }
+  
+  # Status-based scopes for dashboard/reporting
+  scope :completed, -> { where(status: ['paid', 'shipped', 'delivered']) }
+  scope :active, -> { where(status: ['pending', 'paid', 'shipped']) }
 
   # Business Logic - State Transitions (replaces Orders::MarkPaid service)
   def mark_as_paid!(payment_method:, transaction_id:)

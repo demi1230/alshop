@@ -26,5 +26,39 @@ module ApplicationHelper
   def format_tugrik(amount)
     number_to_currency(amount, unit: "₮", precision: 0, format: "%n%u")
   end
+  
+  # Generate hierarchical category options for select dropdown
+  # Shows all categories with indentation, but only leaf categories are selectable
+  def hierarchical_category_options(categories_collection = nil, selected_id = nil)
+    categories = categories_collection || Category.roots.includes(children: :children)
+    options = []
+    
+    categories.each do |category|
+      build_category_options(category, options, 0)
+    end
+    
+    options_for_select(options, selected_id)
+  end
+  
+  private
+  
+  def build_category_options(category, options, level)
+    # Add current category
+    indent = '　' * level  # Japanese space for better visual indentation
+    label = "#{indent}#{category.name}"
+    
+    if category.leaf?
+      # Leaf category - selectable
+      options << [label, category.id]
+    else
+      # Parent category - disabled
+      options << [label + " (folder)", nil, { disabled: true }]
+    end
+    
+    # Recursively add children
+    category.children.ordered.each do |child|
+      build_category_options(child, options, level + 1)
+    end
+  end
 end
 

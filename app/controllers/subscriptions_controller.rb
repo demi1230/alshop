@@ -13,11 +13,15 @@ class SubscriptionsController < ApplicationController
 
   def create
     @subscription_plan = SubscriptionPlan.find(subscription_params[:subscription_plan_id])
+    
+    # Parse service config if provided
+    service_config = params[:user_subscription][:service_config].present? ? JSON.parse(params[:user_subscription][:service_config]) : nil
+    
     @subscription = current_user.user_subscriptions.build(
       subscription_plan: @subscription_plan,
       status: 'active',
-      started_at: Time.current,
-      next_billing_date: calculate_next_billing(@subscription_plan)
+      start_date: Date.current,
+      end_date: nil
     )
 
     if @subscription.save
@@ -34,7 +38,7 @@ class SubscriptionsController < ApplicationController
   end
 
   def cancel
-    if @subscription.update(status: 'cancelled', ended_at: Time.current)
+    if @subscription.update(status: 'cancelled', end_date: Date.current)
       respond_to do |format|
         format.html { redirect_to subscriptions_path, notice: 'Цуцлагдлаа' }
         format.json { render json: { success: true } }
@@ -54,7 +58,7 @@ class SubscriptionsController < ApplicationController
   end
 
   def subscription_params
-    params.require(:user_subscription).permit(:subscription_plan_id)
+    params.require(:user_subscription).permit(:subscription_plan_id, :service_config)
   end
 
   def calculate_next_billing(plan)

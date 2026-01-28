@@ -1,0 +1,251 @@
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0053E2]">Үнийн дүрэм засах</h1>
+      <p class="text-gray-500 text-sm mt-1">Edit Pricing Rule</p>
+    </div>
+    <%= link_to admin_pricing_rules_path, class: "inline-flex items-center gap-2 text-gray-700 font-medium hover:text-gray-900 transition-colors" do %>
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+      </svg>
+      Буцах
+    <% end %>
+  </div>
+
+  <%= form_with model: [:admin, @pricing_rule], local: true, class: "space-y-6" do |f| %>
+    <!-- Rule Info Card -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-lg font-semibold text-[#0053E2] mb-4 flex items-center gap-2">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+        </svg>
+        Дүрмийн мэдээлэл
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Sellable (Optional - empty means applies to all) -->
+        <div class="md:col-span-2">
+          <%= f.label :sellable_id, "Бүтээгдэхүүн/Үйлчилгээ (хоосон үлдвэл бүгдэд хамаарна)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.select :sellable_id,
+            options_for_select(
+              [['-- Бүгдэд хамаарна --', '']] + 
+              @sellables.map { |s| 
+                type_icon = s.sellable_type == 'Product' ? '🛍️' : '⚙️'
+                ["#{type_icon} #{s.name}", s.id] 
+              },
+              @pricing_rule.sellable_id
+            ),
+            {},
+            class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+        </div>
+
+        <!-- Channel -->
+        <div>
+          <%= f.label :channel, "Суваг", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.select :channel,
+            options_for_select([
+              ['Нийтийн', 'public'],
+              ['Компани', 'company'],
+              ['Дэд компани', 'sub_company'],
+              ['Түнш', 'partner'],
+              ['Промо', 'promo']
+            ], @pricing_rule.channel),
+            {},
+            class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]",
+            required: true,
+            data: { pricing_rule_channel: true } %>
+        </div>
+
+        <!-- Priority -->
+        <div>
+          <%= f.label :priority, "Эрэмбэ (их тоо = өндөр эрэмбэ)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.number_field :priority, 
+            class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]",
+            required: true %>
+        </div>
+
+        <!-- Discount Type -->
+        <div>
+          <%= f.label :discount_type, "Хөнгөлөлтийн төрөл", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.select :discount_type,
+            options_for_select([
+              ['Хувиар (percentage)', 'percentage'],
+              ['Тогтмол дүнгээр (fixed amount)', 'fixed'],
+              ['Үнэ солих (price override)', 'override']
+            ], @pricing_rule.discount_type),
+            {},
+            class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]",
+            required: true,
+            data: { pricing_rule_discount_type: true } %>
+        </div>
+
+        <!-- Value -->
+        <div>
+          <%= f.label :value, "Утга", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <div class="relative">
+            <%= f.number_field :value,
+              step: 0.01,
+              placeholder: "жнь: 10 эсвэл 5000",
+              class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]",
+              required: true %>
+            <div class="absolute right-3 top-3 text-gray-500 font-medium pointer-events-none" data-pricing-rule-unit>
+              <%= @pricing_rule.discount_type == 'percentage' ? '%' : '₮' %>
+            </div>
+          </div>
+          <p class="text-sm text-gray-500 mt-1">
+            Хувь: 0-100 хооронд, Тогтмол/Үнэ солих: төгрөгөөр
+          </p>
+        </div>
+
+        <!-- Valid From -->
+        <div>
+          <%= f.label :valid_from, "Эхлэх огноо (заавал биш)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.date_field :valid_from,
+            class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+        </div>
+
+        <!-- Valid To -->
+        <div>
+          <%= f.label :valid_to, "Дуусах огноо (заавал биш)", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.date_field :valid_to,
+            class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+        </div>
+
+        <!-- Company (conditional: shown when channel is company/sub_company) -->
+        <div class="md:col-span-2" data-pricing-rule-company style="<%= @pricing_rule.channel.in?(['company', 'sub_company']) ? '' : 'display: none;' %>">
+          <%= f.label :company_id, "Компани", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.select :company_id,
+            options_for_select(
+              [['-- Компани сонгох --', '']] + @companies.map { |c| [c.name, c.id] },
+              @pricing_rule.company_id
+            ),
+            {},
+            class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+        </div>
+
+        <!-- Promo Code (conditional: shown when channel is promo) -->
+        <div class="md:col-span-2" data-pricing-rule-promo style="<%= @pricing_rule.channel == 'promo' ? '' : 'display: none;' %>">
+          <%= f.label :promo_code, "Промо код", class: "block text-sm font-medium text-gray-700 mb-2" %>
+          <%= f.text_field :promo_code,
+            placeholder: "жнь: SUMMER2026, NEWUSER50",
+            class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+        </div>
+      </div>
+
+      <div class="flex justify-end pt-4 border-t mt-6">
+        <%= f.submit "Мэдээлэл хадгалах", class: "px-2 py-2 bg-[#0053E2] text-white font-medium rounded-lg hover:bg-[#004CC9] transition-colors cursor-pointer" %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Statistics Card -->
+  <div class="bg-gradient-to-r from-purple-50 to-purple-100 border-2 border-purple-300 rounded-lg p-6">
+    <h3 class="text-lg font-semibold text-purple-900 mb-3">Статистик</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <div class="text-sm text-purple-700 font-semibold">Үүсгэсэн огноо</div>
+        <div class="text-lg font-semibold text-purple-900"><%= @pricing_rule.created_at.strftime('%Y-%m-%d') %></div>
+      </div>
+      <div>
+        <div class="text-sm text-purple-700 font-semibold">Сүүлд засварласан</div>
+        <div class="text-lg font-semibold text-purple-900"><%= @pricing_rule.updated_at.strftime('%Y-%m-%d %H:%M') %></div>
+      </div>
+      <div>
+        <div class="text-sm text-purple-700 font-semibold">Төлөв</div>
+        <div class="text-lg font-semibold">
+          <% if @pricing_rule.valid_to && @pricing_rule.valid_to < Time.current %>
+            <span class="text-red-600">Дууссан</span>
+          <% elsif @pricing_rule.valid_from && @pricing_rule.valid_from > Time.current %>
+            <span class="text-orange-600">Хүлээгдэж буй</span>
+          <% else %>
+            <span class="text-green-600">Идэвхтэй</span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <% if @pricing_rule.sellable %>
+      <div class="mt-4 pt-4 border-t border-purple-300">
+        <div class="text-sm text-purple-700 font-semibold mb-2">Хамаарах бүтээгдэхүүн/үйлчилгээ</div>
+        <div class="flex items-center gap-2">
+          <span class="text-2xl"><%= @pricing_rule.sellable.sellable_type == 'Product' ? '🛍️' : '⚙️' %></span>
+          <span class="text-lg font-semibold text-purple-900"><%= @pricing_rule.sellable.name %></span>
+        </div>
+      </div>
+    <% else %>
+      <div class="mt-4 pt-4 border-t border-purple-300">
+        <p class="text-sm text-purple-800 font-medium">
+          Энэ дүрэм бүх бүтээгдэхүүн/үйлчилгээнд хамаарна
+        </p>
+      </div>
+    <% end %>
+
+    <% if @pricing_rule.company %>
+      <div class="mt-3 pt-3 border-t border-purple-300">
+        <div class="text-sm text-purple-700 font-semibold mb-1">Компани</div>
+        <div class="font-semibold text-purple-900"><%= @pricing_rule.company.name %></div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Help Card -->
+  <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-6">
+    <h3 class="text-lg font-semibold text-blue-900 mb-3">Тайлбар</h3>
+    <ul class="space-y-2 text-blue-800 font-medium">
+      <li><strong>Эрэмбэ:</strong> Олон дүрэм хамаарах үед өндөр эрэмбэтэй дүрэм эхэлж ажиллана</li>
+      <li><strong>Хувиар:</strong> Үндсэн үнээс хувиар хөнгөлнө (жнь: 10% = 10)</li>
+      <li><strong>Тогтмол дүн:</strong> Үндсэн үнээс тогтмол дүн хасна (жнь: 5000₮)</li>
+      <li><strong>Үнэ солих:</strong> Үндсэн үнийг бүхэлд нь солино (жнь: шинэ үнэ 15000₮)</li>
+      <li><strong>Компани:</strong> Компани буюу дэд компани сувагт компани заавал шаардлагатай</li>
+      <li><strong>Промо:</strong> Промо сувагт промо код заавал шаардлагатай</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  // Toggle company field based on channel
+  document.addEventListener('DOMContentLoaded', function() {
+    const channelSelect = document.querySelector('[data-pricing-rule-channel]');
+    const companyField = document.querySelector('[data-pricing-rule-company]');
+    const promoField = document.querySelector('[data-pricing-rule-promo]');
+    const discountTypeSelect = document.querySelector('[data-pricing-rule-discount-type]');
+    const unitDisplay = document.querySelector('[data-pricing-rule-unit]');
+
+    function updateFields() {
+      const channel = channelSelect.value;
+      const discountType = discountTypeSelect.value;
+
+      // Show/hide company field
+      if (channel === 'company' || channel === 'sub_company') {
+        companyField.style.display = 'block';
+        companyField.querySelector('select').required = true;
+      } else {
+        companyField.style.display = 'none';
+        companyField.querySelector('select').required = false;
+      }
+
+      // Show/hide promo field
+      if (channel === 'promo') {
+        promoField.style.display = 'block';
+        promoField.querySelector('input').required = true;
+      } else {
+        promoField.style.display = 'none';
+        promoField.querySelector('input').required = false;
+      }
+
+      // Update value unit display
+      if (discountType === 'percentage') {
+        unitDisplay.textContent = '%';
+      } else {
+        unitDisplay.textContent = '₮';
+      }
+    }
+
+    channelSelect.addEventListener('change', updateFields);
+    discountTypeSelect.addEventListener('change', updateFields);
+    
+    // Initial update
+    updateFields();
+  });
+</script>

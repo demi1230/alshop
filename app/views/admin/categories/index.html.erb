@@ -1,0 +1,57 @@
+<div class="space-y-6">
+  <!-- Page Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold text-[#0053E2]">Ангилал</h1>
+      <p class="text-gray-500 text-sm mt-1">Categories</p>
+    </div>
+    <%= link_to "Шинэ ангилал нэмэх", new_admin_category_path, class: "px-2 py-2 bg-[#0053E2] text-white font-medium rounded-lg hover:bg-[#004CC9] transition-colors" %>
+  </div>
+
+  <!-- Search & Actions -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <%= form_with url: admin_categories_path, method: :get, local: true, class: "flex gap-4" do |f| %>
+      <div class="flex-1">
+        <%= f.text_field :q, value: params[:q], placeholder: "Ангилалын нэрээр хайх...", class: "w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0053E2]" %>
+      </div>
+      <div class="flex gap-2">
+        <%= link_to "Цэвэрлэх", admin_categories_path, class: "px-2 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium" %>
+        <%= f.submit "Хайх", class: "px-2 py-2 bg-[#0053E2] text-white font-medium rounded-lg hover:bg-[#004CC9] transition-colors cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Categories List -->
+  <div class="bg-white rounded-lg shadow overflow-hidden">
+    <% if @categories.any? %>
+      <table class="w-full">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Нэр</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Төрөл</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Тодорхойлолт</th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase">Үйлдэл</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <% @categories.each do |category| %>
+            <%= render 'category_row', category: category, level: 0 %>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div class="px-6 py-12 text-center">
+        <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+        </svg>
+        <p class="text-gray-500 font-medium text-base">Ангилал олдсонгүй</p>
+        <% if params[:q].present? %>
+          <p class="text-sm text-gray-500 mt-2">
+            Хайлтын нөхцөлд тохирох ангилал байхгүй байна.
+            <%= link_to "Хайлт цэвэрлэх", admin_categories_path, class: "text-[#0053E2] hover:text-[#004CC9] font-medium" %>
+          </p>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,91 @@
+<%
+  # Admin Button Component
+  # Usage: <%= render 'admin/shared/button', text: 'Шинэ нэмэх', variant: 'primary', icon: 'plus', href: new_admin_product_path %>
+  # Variants: primary, secondary, danger, link
+  
+  variant ||= 'primary'
+  type ||= 'button'
+  icon ||= nil
+  text ||= 'Button'
+  icon_position ||= 'left' # 'left' or 'right'
+  classes ||= ''
+  href ||= nil
+  method ||= nil
+  data ||= {}
+  
+  # Base classes for all buttons
+  base_classes = "inline-flex items-center gap-2 text-sm font-medium transition-colors"
+  
+  # Variant-specific classes
+  variant_classes = case variant
+  when 'primary'
+    "px-2 py-2 bg-[#0053E2] text-white rounded-lg hover:bg-[#004CC9]"
+  when 'secondary'
+    "px-2 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+  when 'danger'
+    "px-2 py-2 text-sm text-red-600 hover:text-red-800"
+  when 'link'
+    "px-2 py-2 text-sm text-[#0053E2] hover:text-[#004CC9]"
+  when 'icon'
+    "w-8 h-8 rounded-lg justify-center text-[#0053E2] hover:bg-blue-50"
+  else
+    "px-2 py-2 bg-[#0053E2] text-white rounded-lg hover:bg-[#004CC9]"
+  end
+  
+  button_classes = "#{base_classes} #{variant_classes} #{classes}"
+  
+  # Icon SVGs
+  plus_icon = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+  </svg>'.html_safe
+  
+  edit_icon = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+  </svg>'.html_safe
+  
+  delete_icon = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+  </svg>'.html_safe
+  
+  arrow_icon = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+  </svg>'.html_safe
+  
+  icon_html = case icon
+  when 'plus' then plus_icon
+  when 'edit' then edit_icon
+  when 'delete' then delete_icon
+  when 'arrow' then arrow_icon
+  else nil
+  end
+%>
+
+<% if href %>
+  <%= link_to href, class: button_classes, method: method, data: data do %>
+    <% if icon_html && icon_position == 'left' %>
+      <%= icon_html %>
+    <% end %>
+    
+    <% if text %>
+      <span><%= text %></span>
+    <% end %>
+    
+    <% if icon_html && icon_position == 'right' %>
+      <%= icon_html %>
+    <% end %>
+  <% end %>
+<% else %>
+  <button type="<%= type %>" class="<%= button_classes %>" data-<%= data.to_json if data.present? %>>
+    <% if icon_html && icon_position == 'left' %>
+      <%= icon_html %>
+    <% end %>
+    
+    <% if text %>
+      <span><%= text %></span>
+    <% end %>
+    
+    <% if icon_html && icon_position == 'right' %>
+      <%= icon_html %>
+    <% end %>
+  </button>
+<% end %>

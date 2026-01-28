@@ -5,10 +5,67 @@ class Product < ApplicationRecord
   # Associations
   belongs_to :category, optional: true
   belongs_to :brand, optional: true
+  
+  # Nested attributes
+  accepts_nested_attributes_for :sellable
 
   # Validations
   validates :sellable, presence: true
   validate :category_must_be_leaf, if: :category_id?
+  validate :variant_dimensions_structure
+
+  # Callbacks
+  before_save :normalize_variant_dimensions
+  after_create :ensure_default_variant
+
+  # Virtual attribute for initial stock
+  attr_accessor :initial_stock
+
+  def ensure_default_variant
+    # Create default variant if no variants exist
+    if sellable.sellable_variants.empty?
+      # Generate SKU from sku_base or sellable name
+      generated_sku = sku_base.presence || "#{sellable.name.parameterize.upcase[0..9]}-DEFAULT"
+      
+      variant = sellable.sellable_variants.create!(
+        variant_name: 'Default',
+        sku: generated_sku,
+        is_active: true
+      )
+      # Create inventory for the default variant with initial stock
+      stock_quantity = initial_stock.present? ? initial_stock.to_i : 0
+      variant.create_inventory!(quantity: stock_quantity) unless variant.inventory
+    end
+  end
+
+  def normalize_variant_dimensions
+    # Only initialize to empty hash if it's truly nil, not if it's already set
+    self.variant_dimensions ||= {}
+    
+    # Only transform keys if we have a hash with data
+    if variant_dimensions.is_a?(Hash) && variant_dimensions.present?
+      self.variant_dimensions = variant_dimensions.transform_keys(&:to_s)
+    end
+  end
+
+  def variant_dimensions_structure
+    return if variant_dimensions.blank?
+    
+    unless variant_dimensions.is_a?(Hash)
+      errors.add(:variant_dimensions, "must be a hash")
+      return
+    end
+
+    variant_dimensions.each do |name, values|
+      unless name.is_a?(String) && name.present?
+        errors.add(:variant_dimensions, "dimension names must be non-empty strings")
+      end
+      
+      unless values.is_a?(Array) && values.all? { |v| v.is_a?(String) }
+        errors.add(:variant_dimensions, "dimension values must be an array of strings")
+      end
+    end
+  end
 
   def category_must_be_leaf
     return unless category&.children&.exists?
@@ -76,5 +133,40 @@ class Product < ApplicationRecord
     product.category_id = attributes[:category_id]
     product.brand_id = attributes[:brand_id]
     product
+  end
+
+  # Variant dimension helpers
+  def dimension_names
+    (variant_dimensions || {}).keys
+  end
+
+  def dimension_values(dimension_name)
+    (variant_dimensions || {})[dimension_name.to_s] || []
+  end
+
+  def add_dimension(name, values = [])
+    self.variant_dimensions ||= {}
+    self.variant_dimensions[name.to_s] = Array(values).map(&:to_s)
+  end
+
+  def remove_dimension(name)
+    self.variant_dimensions ||= {}
+    self.variant_dimensions.delete(name.to_s)
+  end
+
+  def generate_variant_combinations
+    return [] if variant_dimensions.blank?
+    
+    dimensions = variant_dimensions.values
+    return [] if dimensions.any?(&:empty?)
+    
+    # Generate Cartesian product
+    combinations = dimensions.first.product(*dimensions[1..-1])
+    
+    # Convert to hash format
+    dimension_keys = variant_dimensions.keys
+    combinations.map do |combo_values|
+      dimension_keys.zip(Array(combo_values).flatten).to_h
+    end
   end
 end

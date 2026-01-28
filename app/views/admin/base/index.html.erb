@@ -1,0 +1,141 @@
+<% content_for :title, 'Admin Panel' %>
+
+<div class="space-y-6">
+  <!-- Page header -->
+  <div class="text-center mb-8">
+    <h1 class="text-4xl font-black text-[#0053E2] mb-2">AlShop Admin</h1>
+    <p class="text-gray-500 font-semibold">Удирдлагын самбар</p>
+  </div>
+  
+  <!-- Catalog Section -->
+  <div>
+    <h2 class="text-xl font-semibold text-[#0053E2] mb-4 flex items-center gap-2">
+      <span class="w-8 h-1 bg-[#FFC220] rounded-full"></span>
+      Catalog
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Products Card -->
+      <%= link_to admin_products_path, class: "group" do %>
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6 hover:shadow-xl hover:border-[#0053E2] transition-all duration-300 transform hover:-translate-y-1">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-[#E9F1FE] rounded-lg flex items-center justify-center group-hover:bg-[#0053E2] transition-colors">
+              <%= heroicon('cube', class: 'w-6 h-6 text-[#0053E2] group-hover:text-white') %>
+            </div>
+            <svg class="w-5 h-5 text-gray-500 group-hover:text-[#0053E2] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </div>
+          <h3 class="text-base font-semibold text-[#0053E2] mb-1">Products</h3>
+          <p class="text-sm text-gray-500 font-medium">Бүтээгдэхүүн удирдах</p>
+          <div class="mt-4 text-sm text-gray-500 font-normal">
+            <%= Product.count %> бүтээгдэхүүн
+          </div>
+        </div>
+      <% end %>
+      
+      <!-- Services Card -->
+      <%= link_to admin_services_path, class: "group" do %>
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6 hover:shadow-xl hover:border-[#0053E2] transition-all duration-300 transform hover:-translate-y-1">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-[#E9F1FE] rounded-lg flex items-center justify-center group-hover:bg-[#0053E2] transition-colors">
+              <%= heroicon('briefcase', class: 'w-6 h-6 text-[#0053E2] group-hover:text-white') %>
+            </div>
+            <svg class="w-5 h-5 text-gray-500 group-hover:text-[#0053E2] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </div>
+          <h3 class="text-base font-semibold text-[#0053E2] mb-1">Services</h3>
+          <p class="text-sm text-gray-500 font-medium">Үйлчилгээ удирдах</p>
+          <div class="mt-4 text-sm text-gray-500 font-normal">
+            <%= Service.count %> үйлчилгээ
+          </div>
+        </div>
+      <% end %>
+      
+      <!-- Categories Card -->
+      <%= link_to admin_categories_path, class: "group" do %>
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6 hover:shadow-xl hover:border-[#0053E2] transition-all duration-300 transform hover:-translate-y-1">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-[#E9F1FE] rounded-lg flex items-center justify-center group-hover:bg-[#0053E2] transition-colors">
+              <%= heroicon('folder', class: 'w-6 h-6 text-[#0053E2] group-hover:text-white') %>
+            </div>
+            <svg class="w-5 h-5 text-gray-500 group-hover:text-[#0053E2] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </div>
+          <h3 class="text-base font-semibold text-[#0053E2] mb-1">Categories</h3>
+          <p class="text-sm text-gray-500 font-medium">Ангилал удирдах</p>
+          <div class="mt-4 text-sm text-gray-500 font-normal">
+            <%= Category.count %> ангилал
+          </div>
+        </div>
+      <% end %>
+      
+      <!-- Brands Card -->
+      <%= link_to admin_brands_path, class: "group" do %>
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6 hover:shadow-xl hover:border-[#0053E2] transition-all duration-300 transform hover:-translate-y-1">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-[#E9F1FE] rounded-lg flex items-center justify-center group-hover:bg-[#0053E2] transition-colors">
+              <%= heroicon('tag', class: 'w-6 h-6 text-[#0053E2] group-hover:text-white') %>
+            </div>
+            <svg class="w-5 h-5 text-gray-500 group-hover:text-[#0053E2] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </div>
+          <h3 class="text-base font-semibold text-[#0053E2] mb-1">Brands</h3>
+          <p class="text-sm text-gray-500 font-medium">Брэнд удирдах</p>
+          <div class="mt-4 text-sm text-gray-500 font-normal">
+            <%= Brand.count %> брэнд
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+  
+  <!-- Pricing Section -->
+  <div class="mt-12">
+    <h2 class="text-xl font-semibold text-[#0053E2] mb-4 flex items-center gap-2">
+      <span class="w-8 h-1 bg-[#FFC220] rounded-full"></span>
+      Pricing
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Pricing Rules Card -->
+      <%= link_to admin_pricing_rules_path, class: "group" do %>
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6 hover:shadow-xl hover:border-[#FFC220] transition-all duration-300 transform hover:-translate-y-1">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-[#FFC220]/20 rounded-lg flex items-center justify-center group-hover:bg-[#FFC220] transition-colors">
+              <%= heroicon('calculator', class: 'w-6 h-6 text-[#0053E2] group-hover:text-[#0053E2]') %>
+            </div>
+            <svg class="w-5 h-5 text-gray-500 group-hover:text-[#FFC220] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </div>
+          <h3 class="text-base font-semibold text-[#0053E2] mb-1">Pricing Rules</h3>
+          <p class="text-sm text-gray-500 font-medium">Үнийн дүрэм удирдах</p>
+          <div class="mt-4 text-sm text-gray-500 font-normal">
+            <%= PricingRule.where(promo_code: nil).count %> дүрэм
+          </div>
+        </div>
+      <% end %>
+      
+      <!-- Discounts Card -->
+      <%= link_to admin_discounts_path, class: "group" do %>
+        <div class="bg-white rounded-lg shadow border border-gray-200 p-6 hover:shadow-xl hover:border-[#FFC220] transition-all duration-300 transform hover:-translate-y-1">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-[#FFC220]/20 rounded-lg flex items-center justify-center group-hover:bg-[#FFC220] transition-colors">
+              <%= heroicon('receipt-percent', class: 'w-6 h-6 text-[#0053E2] group-hover:text-[#0053E2]') %>
+            </div>
+            <svg class="w-5 h-5 text-gray-500 group-hover:text-[#FFC220] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </div>
+          <h3 class="text-base font-semibold text-[#0053E2] mb-1">Discounts</h3>
+          <p class="text-sm text-gray-500 font-medium">Хөнгөлөлт удирдах</p>
+          <div class="mt-4 text-sm text-gray-500 font-normal">
+            <%= PricingRule.where.not(promo_code: nil).count %> хөнгөлөлт
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

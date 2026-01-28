@@ -38,9 +38,61 @@ Rails.application.routes.draw do
 
   # Admin namespace
   namespace :admin do
-    resources :products, except: [:show]
-    resources :categories
-    resources :brands
+    root to: 'base#index'
+    get 'dashboard', to: 'dashboard#index'
+    
+    # Catalog Management
+    resources :products do
+      collection do
+        patch :bulk_update
+        patch :reorder
+      end
+      member do
+        patch :toggle_active
+        post :generate_combinations
+        patch :update_variants
+      end
+    end
+    
+    resources :services do
+      collection do
+        post :bulk_action
+      end
+      member do
+        patch :toggle_active
+      end
+      resources :service_config_specs, except: [:show]
+      resources :subscription_plans, except: [:show]
+    end
+    
+    resources :categories do
+      collection do
+        post :bulk_action
+        patch :reorder
+      end
+      resources :category_attributes, except: [:show]
+    end
+    
+    resources :brands do
+      collection do
+        post :bulk_action
+      end
+    end
+    
+    # Pricing & Discounts
+    resources :pricing_rules do
+      collection do
+        post :bulk_action
+      end
+    end
+    
+    resources :discounts do
+      member do
+        patch :toggle_active
+      end
+    end
+    
+    # Orders & Fulfillment
     resources :orders, only: [:index, :show] do
       member do
         patch :mark_paid
@@ -48,7 +100,32 @@ Rails.application.routes.draw do
         patch :cancel
       end
     end
-    resources :pricing_rules
+    
+    resources :service_fulfillments, only: [:index, :show, :update] do
+      member do
+        patch :assign
+        patch :complete
+      end
+    end
+    
+    # B2B Management
+    resources :companies do
+      member do
+        patch :toggle_active
+      end
+    end
+    
+    resources :company_pricing_rules
+    
+    # User Management
+    resources :users, only: [:index, :show, :edit, :update] do
+      member do
+        patch :toggle_active
+      end
+    end
+    
+    # Settings
+    resource :settings, only: [:show, :update]
   end
 
   # API namespace

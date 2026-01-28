@@ -49,15 +49,41 @@
                     </p>
                   <% end %>
                   
+                  <!-- Service Configuration (if exists) -->
+                  <% if item.configuration.present? && item.sellable.sellable_type == 'Service' %>
+                    <div class="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p class="text-xs font-semibold text-blue-800 mb-2">Тохиргоо:</p>
+                      <% item.configuration.each do |spec_id, config| %>
+                        <% spec = ServiceConfigSpec.find_by(id: spec_id) %>
+                        <% if spec %>
+                          <div class="text-sm text-gray-700 mb-1">
+                            <span class="font-medium"><%= spec.field_name %>:</span>
+                            <span><%= config['value'] %></span>
+                            <% if config['unit_price'].to_f > 0 %>
+                              <span class="text-blue-600 ml-1">(+<%= number_to_currency(config['unit_price'], unit: "₮", precision: 0, format: "%n%u") %>)</span>
+                            <% end %>
+                          </div>
+                        <% end %>
+                      <% end %>
+                    </div>
+                  <% end %>
+                  
                   <!-- Price -->
                   <div class="mb-4">
                     <% variant_price = item.sellable_variant&.discounted_price || item.sellable.base_price %>
                     <% original_price = item.sellable_variant&.effective_price || item.sellable.base_price %>
                     <% has_discount = item.sellable_variant&.has_discount? || false %>
                     
+                    <!-- Calculate config price if service -->
+                    <% config_price = 0 %>
+                    <% if item.sellable.sellable_type == 'Service' && item.configuration.present? %>
+                      <% config_price = item.configuration.values.sum { |config| config['unit_price'].to_f } %>
+                    <% end %>
+                    <% total_item_price = variant_price + config_price %>
+                    
                     <div class="flex items-center gap-2">
                       <span class="text-lg font-bold text-gray-900">
-                        <%= number_to_currency(variant_price, unit: "₮", precision: 0, format: "%n%u") %>
+                        <%= number_to_currency(total_item_price, unit: "₮", precision: 0, format: "%n%u") %>
                       </span>
                       <% if has_discount %>
                         <span class="text-sm text-gray-400 line-through">
@@ -67,35 +93,36 @@
                     </div>
                   </div>
                   
-                  <!-- Stock Info -->
-                  <% current_stock = item.sellable_variant&.inventory&.quantity || 0 %>
-                  <% if current_stock <= 5 %>
-                    <div class="mb-2">
-                      <span class="text-xs <%= current_stock == 0 ? 'text-red-600' : 'text-orange-600' %> font-semibold">
-                        <%= current_stock == 0 ? 'Дууссан' : "#{current_stock} ширхэг үлдсэн" %>
-                      </span>
-                    </div>
-                  <% end %>
+                  <!-- Stock Info and Quantity Controls (only for products, not services) -->
+                  <% unless item.sellable.sellable_type == 'Service' %>
+                    <% current_stock = item.sellable_variant&.inventory&.quantity || 0 %>
+                    <% if current_stock <= 5 %>
+                      <div class="mb-2">
+                        <span class="text-xs <%= current_stock == 0 ? 'text-red-600' : 'text-orange-600' %> font-semibold">
+                          <%= current_stock == 0 ? 'Дууссан' : "#{current_stock} ширхэг үлдсэн" %>
+                        </span>
+                      </div>
+                    <% end %>
 
-                  <!-- Quantity Controls -->
-                  <div class="flex items-center gap-4">
-                    <%= form_with url: cart_item_path(item), method: :patch, data: { turbo: false }, class: "flex items-center gap-3" do |f| %>
-                      <% decrease_disabled = item.quantity <= 1 %>
-                      <%= button_tag type: "submit", 
-                        name: "cart_item[quantity]", 
-                        value: [item.quantity - 1, 1].max,
-                        disabled: decrease_disabled,
-                        class: "w-10 h-10 rounded-full flex items-center justify-center transition-all #{decrease_disabled ? 'bg-gray-500 cursor-not-allowed opacity-50' : 'bg-[#0053E2] hover:bg-[#003299]'}" do %>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                          <path fill-rule="evenodd" clip-rule="evenodd" d="M13.5 6.5C13.7761 6.5 14 6.72386 14 7C14 7.27614 13.7761 7.5 13.5 7.5H0.5C0.223858 7.5 0 7.27614 0 7C0 6.72386 0.223858 6.5 0.5 6.5H13.5Z" fill="white"/>
-                        </svg>
-                      <% end %>
-                      
-                      <span class="text-2xl font-bold text-gray-900 w-12 text-center">
-                        <%= item.quantity %>
-                      </span>
-                      
-                      <% increase_disabled = item.quantity >= current_stock %>
+                    <!-- Quantity Controls -->
+                    <div class="flex items-center gap-4">
+                      <%= form_with url: cart_item_path(item), method: :patch, data: { turbo: false }, class: "flex items-center gap-3" do |f| %>
+                        <% decrease_disabled = item.quantity <= 1 %>
+                        <%= button_tag type: "submit", 
+                          name: "cart_item[quantity]", 
+                          value: [item.quantity - 1, 1].max,
+                          disabled: decrease_disabled,
+                          class: "w-10 h-10 rounded-full flex items-center justify-center transition-all #{decrease_disabled ? 'bg-gray-500 cursor-not-allowed opacity-50' : 'bg-[#0053E2] hover:bg-[#003299]'}" do %>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M13.5 6.5C13.7761 6.5 14 6.72386 14 7C14 7.27614 13.7761 7.5 13.5 7.5H0.5C0.223858 7.5 0 7.27614 0 7C0 6.72386 0.223858 6.5 0.5 6.5H13.5Z" fill="white"/>
+                          </svg>
+                        <% end %>
+                        
+                        <span class="text-2xl font-bold text-gray-900 w-12 text-center">
+                          <%= item.quantity %>
+                        </span>
+                        
+                        <% increase_disabled = item.quantity >= current_stock %>
                       <%= button_tag type: "submit", 
                         name: "cart_item[quantity]", 
                         value: item.quantity + 1,
@@ -106,7 +133,8 @@
                         </svg>
                       <% end %>
                     <% end %>
-                  </div>
+                    </div>
+                  <% end %>
                 </div>
 
                 <!-- Remove Button -->
@@ -143,12 +171,16 @@
           <!-- Cart Items List -->
           <div class="space-y-4 mb-6 pb-6 border-b border-gray-200">
             <% @cart.cart_items.each do |item| %>
+              <% item_config_price = 0 %>
+              <% if item.sellable.sellable_type == 'Service' && item.configuration.present? %>
+                <% item_config_price = item.configuration.values.sum { |config| config['unit_price'].to_f } %>
+              <% end %>
               <div class="flex justify-between text-sm">
                 <span class="text-gray-700">
                   <%= item.sellable_variant.sellable.name %> × <%= item.quantity %>
                 </span>
                 <span class="font-semibold text-gray-900">
-                  <%= number_to_currency((item.sellable_variant&.discounted_price || item.sellable.base_price) * item.quantity, unit: "₮", precision: 0, format: "%n%u") %>
+                  <%= number_to_currency(((item.sellable_variant&.discounted_price || item.sellable.base_price) + item_config_price) * item.quantity, unit: "₮", precision: 0, format: "%n%u") %>
                 </span>
               </div>
             <% end %>
@@ -159,7 +191,14 @@
             <span class="text-lg font-semibold text-gray-900">Нийт үнэ:</span>
             <span class="text-3xl font-bold text-gray-900">
               <%= number_to_currency(
-                @cart.cart_items.sum { |item| (item.sellable_variant&.discounted_price || item.sellable.base_price) * item.quantity },
+                @cart.cart_items.sum do |item|
+                  base_price = item.sellable_variant&.discounted_price || item.sellable.base_price
+                  config_price = 0
+                  if item.sellable.sellable_type == 'Service' && item.configuration.present?
+                    config_price = item.configuration.values.sum { |config| config['unit_price'].to_f }
+                  end
+                  (base_price + config_price) * item.quantity
+                end,
                 unit: "₮", 
                 precision: 0, 
                 format: "%n%u"

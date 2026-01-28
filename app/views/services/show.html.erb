@@ -100,7 +100,7 @@
                   <% if spec.has_options? %>
                     <!-- Options as buttons (like product variants) -->
                     <div class="flex flex-wrap gap-3">
-                      <% spec.options.each do |option| %>
+                      <% spec.parsed_options.each do |option| %>
                         <% 
                           option_value = option.is_a?(Hash) ? option['value'] : option
                           option_price = option.is_a?(Hash) ? option['price'] : spec.unit_price
@@ -124,25 +124,25 @@
                       <%= text_field_tag "config[#{spec.id}]", nil, 
                         class: "w-full rounded-lg border-gray-300 text-sm focus:border-[#0053E2] focus:ring-[#0053E2]",
                         placeholder: spec.field_name,
-                        data: { config_spec_id: spec.id, unit_price: spec.unit_price } %>
+                        data: { config_spec_id: spec.id, unit_price: spec.unit_price, type: spec.data_type } %>
                     <% when 'int', 'number', 'integer' %>
                       <%= number_field_tag "config[#{spec.id}]", nil,
                         class: "w-full rounded-lg border-gray-300 text-sm focus:border-[#0053E2] focus:ring-[#0053E2]",
                         placeholder: spec.field_name,
-                        data: { config_spec_id: spec.id, unit_price: spec.unit_price } %>
+                        data: { config_spec_id: spec.id, unit_price: spec.unit_price, type: 'integer' } %>
                     <% when 'date' %>
                       <%= date_field_tag "config[#{spec.id}]", nil,
                         class: "w-full rounded-lg border-gray-300 text-sm focus:border-[#0053E2] focus:ring-[#0053E2]",
-                        data: { config_spec_id: spec.id, unit_price: spec.unit_price } %>
+                        data: { config_spec_id: spec.id, unit_price: spec.unit_price, type: spec.data_type } %>
                     <% when 'datetime' %>
                       <%= datetime_local_field_tag "config[#{spec.id}]", nil,
                         class: "w-full rounded-lg border-gray-300 text-sm focus:border-[#0053E2] focus:ring-[#0053E2]",
-                        data: { config_spec_id: spec.id, unit_price: spec.unit_price } %>
+                        data: { config_spec_id: spec.id, unit_price: spec.unit_price, type: spec.data_type } %>
                     <% when 'bool', 'boolean' %>
                       <label class="flex items-center">
                         <%= check_box_tag "config[#{spec.id}]", "true", false,
                           class: "w-4 h-4 text-[#0053E2] rounded focus:ring-[#0053E2]",
-                          data: { config_spec_id: spec.id, unit_price: spec.unit_price } %>
+                          data: { config_spec_id: spec.id, unit_price: spec.unit_price, type: spec.data_type } %>
                         <span class="ml-2 text-sm text-gray-700">Идэвхжүүлэх</span>
                       </label>
                     <% end %>
@@ -286,13 +286,15 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+function initializeServiceConfig() {
   const quantityEl = document.getElementById('quantity');
   const decreaseBtn = document.getElementById('decrease-qty');
   const increaseBtn = document.getElementById('increase-qty');
   const subtotalEl = document.getElementById('subtotal');
   const cartQuantityInput = document.getElementById('cart_quantity');
   const basePriceEl = document.getElementById('base-price');
+  
+  if (!basePriceEl) return; // Already initialized or elements not found
   const configPriceEl = document.getElementById('config-price');
   const configPriceSection = document.getElementById('config-price-section');
   const serviceConfigData = document.getElementById('service_config_data');
@@ -302,53 +304,92 @@ document.addEventListener('DOMContentLoaded', function() {
   let configPrice = 0;
   const selectedOptions = {}; // Track selected options by spec_id
   
+  console.log('Service price calculator initialized');
+  console.log('Base price:', basePrice);
+  
   function updatePrice() {
     const total = (basePrice * quantity) + configPrice;
+    console.log('Price update - basePrice:', basePrice, 'quantity:', quantity, 'configPrice:', configPrice, 'total:', total);
+    console.log('DOM elements check - subtotalEl:', subtotalEl, 'configPriceEl:', configPriceEl, 'configPriceSection:', configPriceSection);
+    
+    if (!subtotalEl) {
+      console.error('subtotalEl not found!');
+      return;
+    }
+    
     subtotalEl.textContent = new Intl.NumberFormat('en-US', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(total) + '₮';
     
+    console.log('Updated subtotal text to:', subtotalEl.textContent);
+    
     if (configPrice > 0) {
-      configPriceSection.style.display = 'block';
-      configPriceEl.textContent = new Intl.NumberFormat('en-US', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(configPrice) + '₮';
+      if (configPriceSection) configPriceSection.style.display = 'block';
+      if (configPriceEl) {
+        configPriceEl.textContent = new Intl.NumberFormat('en-US', {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0
+        }).format(configPrice) + '₮';
+        console.log('Updated config price text to:', configPriceEl.textContent);
+      }
     } else {
-      configPriceSection.style.display = 'none';
+      if (configPriceSection) configPriceSection.style.display = 'none';
     }
   }
   
   function collectConfigData() {
+    console.log('Collecting config data...');
     const configData = {};
     
     // Collect from input fields
     document.querySelectorAll('[data-config-spec-id]:not(.config-option)').forEach(input => {
       const specId = input.dataset.configSpecId;
       const unitPrice = parseFloat(input.dataset.unitPrice || 0);
+      const dataType = input.dataset.type;
+      
+      console.log('Processing input - specId:', specId, 'type:', dataType, 'value:', input.value, 'unitPrice:', unitPrice);
       
       if (input.type === 'checkbox') {
         if (input.checked) {
           configData[specId] = { value: true, unit_price: unitPrice };
+          console.log('Added checkbox config:', specId, unitPrice);
         }
       } else if (input.value) {
-        configData[specId] = { value: input.value, unit_price: unitPrice };
+        let finalValue = input.value;
+        let finalPrice = unitPrice;
+        
+        // For integer types, multiply value by unit_price
+        if (dataType === 'integer') {
+          const intValue = parseInt(input.value, 10);
+          finalPrice = intValue * unitPrice;
+          console.log('Integer config - value:', intValue, 'unitPrice:', unitPrice, 'finalPrice:', finalPrice);
+        }
+        
+        configData[specId] = { value: finalValue, unit_price: finalPrice };
+        console.log('Added input config:', specId, finalValue, finalPrice);
       }
     });
     
     // Collect from selected options
     Object.keys(selectedOptions).forEach(specId => {
       configData[specId] = selectedOptions[specId];
+      console.log('Added option config:', specId, selectedOptions[specId]);
     });
+    
+    console.log('Total configs collected:', Object.keys(configData).length);
     
     // Calculate total config price
     configPrice = Object.values(configData).reduce((sum, item) => {
       if (item.value && item.unit_price) {
-        return sum + parseFloat(item.unit_price);
+        const price = parseFloat(item.unit_price);
+        console.log('Adding price:', price, 'to sum:', sum);
+        return sum + price;
       }
       return sum;
     }, 0);
+    
+    console.log('Final configPrice:', configPrice);
     
     serviceConfigData.value = JSON.stringify(configData);
     updatePrice();
@@ -360,6 +401,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const specId = this.dataset.configSpecId;
       const optionValue = this.dataset.optionValue;
       const unitPrice = parseFloat(this.dataset.unitPrice || 0);
+      
+      console.log('Option clicked - specId:', specId, 'value:', optionValue, 'unitPrice:', unitPrice);
       
       // Remove active state from siblings
       const container = this.closest('[data-config-spec]');
@@ -410,5 +453,9 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Initial config collection
   collectConfigData();
-});
+}
+
+// Initialize on page load and Turbo navigation
+document.addEventListener('turbo:load', initializeServiceConfig);
+document.addEventListener('DOMContentLoaded', initializeServiceConfig);
 </script>

@@ -1,10 +1,14 @@
-class Admin::CategoriesController < ApplicationController
-  before_action :authenticate_user!
-  before_action :authorize_admin
-  before_action :set_category, only: [:edit, :update, :destroy]
+module Admin
+  class CategoriesController < BaseController
+    before_action :set_category, only: [:edit, :update, :destroy]
 
   def index
     @categories = Category.roots.includes(:children)
+    
+    # Search
+    if params[:q].present?
+      @categories = Category.where('name LIKE ?', "%#{params[:q]}%")
+    end
     
     respond_to do |format|
       format.html
@@ -52,19 +56,27 @@ class Admin::CategoriesController < ApplicationController
     end
   end
 
+  def bulk_action
+    category_ids = params[:category_ids]
+    action = params[:action_type]
+
+    case action
+    when 'delete'
+      Category.where(id: category_ids).destroy_all
+      message = 'Ангиллууд устгагдлаа'
+    end
+
+    redirect_to admin_categories_path, notice: message
+  end
+
   private
 
   def set_category
     @category = Category.find(params[:id])
   end
 
-  def authorize_admin
-    unless current_user&.admin?
-      redirect_to root_path, alert: 'Админ эрх шаардлагатай'
-    end
-  end
-
   def category_params
-    params.require(:category).permit(:name, :parent_id)
+    params.require(:category).permit(:name, :parent_id, :description)
+  end
   end
 end
