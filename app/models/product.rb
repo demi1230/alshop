@@ -27,14 +27,18 @@ class Product < ApplicationRecord
       # Generate SKU from sku_base or sellable name
       generated_sku = sku_base.presence || "#{sellable.name.parameterize.upcase[0..9]}-DEFAULT"
       
-      variant = sellable.sellable_variants.create!(
+      variant = sellable.sellable_variants.find_or_create_by!(
         variant_name: 'Default',
-        sku: generated_sku,
-        is_active: true
-      )
+        sku: generated_sku
+      ) do |v|
+        v.is_active = true
+      end
+      
       # Create inventory for the default variant with initial stock
-      stock_quantity = initial_stock.present? ? initial_stock.to_i : 0
-      variant.create_inventory!(quantity: stock_quantity) unless variant.inventory
+      unless variant.inventory
+        stock_quantity = initial_stock.present? ? initial_stock.to_i : 0
+        variant.create_inventory!(quantity: stock_quantity)
+      end
     end
   end
 

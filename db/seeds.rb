@@ -205,8 +205,8 @@ products_data = [
 
 created_count = 0
 products_data.each do |data|
-  # Check if product already exists
-  sellable = Sellable.find_by(name: data[:name])
+  # Check if product already exists by sellable name
+  sellable = Sellable.find_by(name: data[:name], sellable_type: 'Product')
   
   unless sellable
     sellable = Sellable.create!(
