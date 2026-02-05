@@ -24,15 +24,22 @@ class Product < ApplicationRecord
   def ensure_default_variant
     # Create default variant if no variants exist
     if sellable.sellable_variants.empty?
-      # Generate SKU from sku_base or sellable name
-      generated_sku = sku_base.presence || "#{sellable.name.parameterize.upcase[0..9]}-DEFAULT"
+      # Generate unique SKU from sku_base or sellable name + timestamp
+      base_sku = sku_base.presence || sellable.name.parameterize.upcase[0..9]
+      generated_sku = "#{base_sku}-DEFAULT"
       
-      variant = sellable.sellable_variants.find_or_create_by!(
-        variant_name: 'Default',
-        sku: generated_sku
-      ) do |v|
-        v.is_active = true
+      # Ensure uniqueness by checking if SKU exists
+      counter = 1
+      while SellableVariant.exists?(sku: generated_sku)
+        generated_sku = "#{base_sku}-DEFAULT-#{counter}"
+        counter += 1
       end
+      
+      variant = sellable.sellable_variants.create!(
+        variant_name: 'Default',
+        sku: generated_sku,
+        is_active: true
+      )
       
       # Create inventory for the default variant with initial stock
       unless variant.inventory

@@ -262,15 +262,19 @@ unless Product.exists?(sellable: poncho_sellable)
   ]
   
   variants_data.each do |v|
-    variant = SellableVariant.create!(
+    sku = "PONCHO-#{v[:attrs][:size]}-#{v[:attrs][:color][0..2].upcase}"
+    variant = SellableVariant.find_or_create_by!(
       sellable: poncho_sellable,
-      variant_name: v[:name],
-      sku: "PONCHO-#{v[:attrs][:size]}-#{v[:attrs][:color][0..2].upcase}",
-      attributes: v[:attrs],
-      is_active: true
-    )
+      sku: sku
+    ) do |sv|
+      sv.variant_name = v[:name]
+      sv.attributes = v[:attrs]
+      sv.is_active = true
+    end
     
-    Inventory.create!(sellable_variant: variant, quantity: v[:stock])
+    Inventory.find_or_create_by!(sellable_variant: variant) do |inv|
+      inv.quantity = v[:stock]
+    end
   end
   
   # Pricing rule: Ногоон өнгө + S/M/L → 10% discount
