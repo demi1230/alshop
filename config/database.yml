@@ -22,4 +22,14 @@ test:
 
 # PostgreSQL for production (Railway auto-injects DATABASE_URL)
 production:
-  url: <%= ENV['DATABASE_URL'] %>
+  primary:
+    url: <%= ENV['DATABASE_URL'] %>
+  cache:
+    url: <%= ENV['DATABASE_URL'] %>
+    migrations_paths: db/cache_migrate
+  queue:
+    url: <%= ENV['DATABASE_URL'] %>
+    migrations_paths: db/queue_migrate
+  cable:
+    url: <%= ENV['DATABASE_URL'] %>
+    migrations_paths: db/cable_migrate
