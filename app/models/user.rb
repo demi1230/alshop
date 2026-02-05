@@ -36,6 +36,6 @@ class User < ApplicationRecord
   private
 
   def create_cart_if_needed
-    create_cart!(status: :active) unless cart.present?
+    carts.create!(status: :active) unless carts.active.exists?
   end
 end
