@@ -40,18 +40,27 @@
         <% end %>
       <% else %>
         <!-- No variants or single variant - show "Add to Cart" button -->
-        <%= link_to cart_items_path(cart_item: { 
-          sellable_variant_id: product.sellable.sellable_variants.first&.id, 
-          sellable_id: product.sellable.id,
-          quantity: 1 
-        }),
-          method: :post,
-          data: { turbo_method: :post },
-          class: "w-full bg-[#0053E2] hover:bg-[#003299] text-white text-sm font-semibold py-2 px-4 rounded-button flex items-center justify-center gap-2 mb-3" do %>
-          <span>Сагслах</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none">
-            <path d="M8.13961 0.158998C8.3267 -0.0530697 8.63019 -0.0529289 8.81735 0.158998L14.8574 7.00374C15.0506 7.22315 15.047 7.58094 14.8495 7.79561C14.8133 7.83497 14.7721 7.86457 14.7294 7.88877L8.99703 14.8331C8.81334 15.0556 8.51564 15.0557 8.332 14.8331C8.14873 14.6105 8.14848 14.2495 8.332 14.027L13.3486 7.94959H0.499998C0.223918 7.94959 9.89309e-05 7.65287 0 7.28711C0 6.92123 0.223857 6.62463 0.499998 6.62463H13.1445L8.13961 0.926282C7.95347 0.714225 7.95339 0.370823 8.13961 0.158998Z" fill="#E9F1FE"/>
-          </svg>
+        <% default_variant = product.sellable.sellable_variants.first %>
+        <% inventory_qty = default_variant&.inventory&.quantity || 0 %>
+        
+        <% if inventory_qty > 0 %>
+          <%= link_to cart_items_path(cart_item: { 
+            sellable_variant_id: default_variant.id, 
+            sellable_id: product.sellable.id,
+            quantity: 1 
+          }),
+            method: :post,
+            data: { turbo_method: :post },
+            class: "w-full bg-[#0053E2] hover:bg-[#003299] text-white text-sm font-semibold py-2 px-4 rounded-button flex items-center justify-center gap-2 mb-3" do %>
+            <span>Сагслах</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 15 15" fill="none">
+              <path d="M8.13961 0.158998C8.3267 -0.0530697 8.63019 -0.0529289 8.81735 0.158998L14.8574 7.00374C15.0506 7.22315 15.047 7.58094 14.8495 7.79561C14.8133 7.83497 14.7721 7.86457 14.7294 7.88877L8.99703 14.8331C8.81334 15.0556 8.51564 15.0557 8.332 14.8331C8.14873 14.6105 8.14848 14.2495 8.332 14.027L13.3486 7.94959H0.499998C0.223918 7.94959 9.89309e-05 7.65287 0 7.28711C0 6.92123 0.223857 6.62463 0.499998 6.62463H13.1445L8.13961 0.926282C7.95347 0.714225 7.95339 0.370823 8.13961 0.158998Z" fill="#E9F1FE"/>
+            </svg>
+          <% end %>
+        <% else %>
+          <button disabled class="w-full bg-gray-400 cursor-not-allowed text-white text-sm font-semibold py-2 px-4 rounded-button mb-3">
+            Дууссан
+          </button>
         <% end %>
       <% end %>
 

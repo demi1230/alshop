@@ -40,6 +40,24 @@ module ApplicationHelper
     options_for_select(options, selected_id)
   end
   
+  # Return CSS class for order status badge
+  def status_badge_class(status)
+    case status.to_s
+    when 'pending'
+      'status-pending'
+    when 'paid'
+      'status-paid'
+    when 'shipped'
+      'status-shipped'
+    when 'delivered'
+      'status-delivered'
+    when 'cancelled'
+      'status-cancelled'
+    else
+      'bg-gray-100 text-gray-800'
+    end
+  end
+  
   private
   
   def build_category_options(category, options, level)

@@ -29,3 +29,10 @@
 
 en:
   hello: "Hello world"
+  order:
+    status:
+      pending: "Хүлээгдэж байна"
+      paid: "Төлсөн"
+      shipped: "Илгээсэн"
+      delivered: "Хүргэгдсэн"
+      cancelled: "Цуцалсан"

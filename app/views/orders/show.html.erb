@@ -1,0 +1,142 @@
+<div class="max-w-4xl mx-auto px-4 py-8">
+  <!-- Order Header -->
+  <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+    <div class="bg-gradient-to-r from-[#0053E2] to-[#0041B3] text-white px-6 py-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold mb-2">Захиалга #<%= @order.id %></h1>
+          <p class="text-blue-100">
+            <%= l(@order.created_at, format: :long) %>
+          </p>
+        </div>
+        <div class="text-right">
+          <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold <%= status_badge_class(@order.status) %>">
+            <%= t("order.status.#{@order.status}") %>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="px-6 py-6 border-b">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Нийт дүн</p>
+          <p class="text-2xl font-bold text-gray-900"><%= number_to_currency(@order.total_price, unit: "₮", format: "%n %u") %></p>
+        </div>
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Бараа</p>
+          <p class="text-lg font-semibold text-gray-900"><%= @order.order_items.count %> ширхэг</p>
+        </div>
+        <div>
+          <p class="text-sm text-gray-500 mb-1">Төлбөрийн төлөв</p>
+          <p class="text-lg font-semibold <%= @order.paid? ? 'text-green-600' : 'text-yellow-600' %>">
+            <%= @order.paid? ? 'Төлсөн' : 'Төлөөгүй' %>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Order Items -->
+    <div class="px-6 py-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <%= heroicon('shopping-bag', class: 'w-6 h-6 text-[#0053E2]') %>
+        Захиалсан бараа
+      </h2>
+      
+      <div class="space-y-4">
+        <% @order_items.each do |item| %>
+          <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+            <div class="flex-shrink-0 w-20 h-20 bg-white rounded border flex items-center justify-center">
+              <%= heroicon(item.sellable.sellable_type == 'Service' ? 'cog' : 'cube', class: 'w-10 h-10 text-gray-400') %>
+            </div>
+            
+            <div class="flex-grow">
+              <h3 class="font-semibold text-gray-900 mb-1">
+                <%= item.config_snapshot['sellable_name'] %>
+              </h3>
+              
+              <% if item.config_snapshot['variant_name'].present? %>
+                <p class="text-sm text-gray-600 mb-1">
+                  Вариант: <%= item.config_snapshot['variant_name'] %>
+                </p>
+              <% end %>
+              
+              <% if item.config_snapshot['configuration'].present? %>
+                <div class="mt-2 p-3 bg-blue-50 rounded border border-blue-200">
+                  <p class="text-xs font-semibold text-blue-900 mb-2">Тохиргоо:</p>
+                  <% item.config_snapshot['configuration'].each do |key, value| %>
+                    <div class="text-sm text-blue-800">
+                      <span class="font-medium"><%= key %>:</span>
+                      <span><%= value.is_a?(Hash) ? value['value'] : value %></span>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+              
+              <div class="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                <span>Тоо ширхэг: <%= item.quantity %></span>
+                <span>×</span>
+                <span><%= number_to_currency(item.price_at_purchase, unit: "₮", format: "%n %u") %></span>
+              </div>
+            </div>
+            
+            <div class="flex-shrink-0 text-right">
+              <p class="text-lg font-bold text-gray-900">
+                <%= number_to_currency(item.line_total, unit: "₮", format: "%n %u") %>
+              </p>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Shipping Address -->
+    <% if @order.shipping_address.present? %>
+      <div class="px-6 py-6 border-t bg-gray-50">
+        <h2 class="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+          <%= heroicon('map-pin', class: 'w-5 h-5 text-[#0053E2]') %>
+          Хүргэлтийн хаяг
+        </h2>
+        <div class="text-gray-700 space-y-1">
+          <p><strong>Нэр:</strong> <%= @order.shipping_address.full_name %></p>
+          <p><strong>Утас:</strong> <%= @order.shipping_address.phone_number %></p>
+          <p><strong>Хот:</strong> <%= @order.shipping_address.city %></p>
+          <% if @order.shipping_address.district.present? %>
+            <p><strong>Дүүрэг:</strong> <%= @order.shipping_address.district %></p>
+          <% end %>
+          <% if @order.shipping_address.apartment_details.present? %>
+            <p><strong>Хаяг:</strong> <%= @order.shipping_address.apartment_details %></p>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Order Total -->
+    <div class="px-6 py-6 border-t bg-gradient-to-r from-gray-50 to-white">
+      <div class="flex justify-between items-center">
+        <span class="text-lg font-semibold text-gray-700">Нийт төлөх дүн:</span>
+        <span class="text-3xl font-bold text-[#0053E2]">
+          <%= number_to_currency(@order.total_price, unit: "₮", format: "%n %u") %>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex gap-4">
+    <%= link_to "Буцах", orders_path, class: "px-6 py-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition" %>
+    
+    <% unless @order.paid? %>
+      <button class="px-6 py-3 bg-[#0053E2] text-white font-medium rounded-lg hover:bg-[#004CC9] transition flex-grow">
+        Төлбөр төлөх
+      </button>
+    <% end %>
+  </div>
+</div>
+
+<% content_for :head do %>
+  <style>
+    <%= render 'status_badge_styles' %>
+  </style>
+<% end %>

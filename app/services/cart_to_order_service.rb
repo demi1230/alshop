@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'ostruct'
+
 # CartToOrderService - Converts a cart into an immutable order
 # with snapshotted prices and configuration.
 #
@@ -76,6 +78,21 @@ class CartToOrderService
     cart.cart_items.each do |cart_item|
       price = calculate_price_for_item(cart_item)
 
+      # Deduct inventory for products (not services)
+      if cart_item.sellable.sellable_type == 'Product'
+        inventory = cart_item.sellable_variant&.inventory
+        
+        unless inventory
+          raise ValidationError, "#{cart_item.sellable.name} барааны үлдэгдлийн мэдээлэл олдсонгүй"
+        end
+        
+        if inventory.quantity < cart_item.quantity
+          raise ValidationError, "#{cart_item.sellable.name} барааны үлдэгдэл хүрэлцэхгүй байна (Хүссэн: #{cart_item.quantity}, Үлдсэн: #{inventory.quantity})"
+        end
+        
+        inventory.update!(quantity: inventory.quantity - cart_item.quantity)
+      end
+
       OrderItem.create!(
         order: order,
         sellable: cart_item.sellable,
@@ -116,13 +133,20 @@ class CartToOrderService
   end
 
   def build_snapshot(cart_item, price)
-    {
+    snapshot = {
       sellable_name: cart_item.sellable.name,
       sellable_type: cart_item.sellable.sellable_type,
       variant_name: cart_item.sellable_variant&.variant_name,
       base_price: cart_item.sellable.base_price,
       final_price: price
     }
+    
+    # Include service configuration if present
+    if cart_item.configuration.present?
+      snapshot[:configuration] = cart_item.configuration
+    end
+    
+    snapshot
   end
 
   def success(order)

@@ -29,6 +29,17 @@ class CartItemsController < ApplicationController
       variant = SellableVariant.find(variant_id)
     end
     
+    # Check inventory for products (not services)
+    if variant.sellable.sellable_type == 'Product'
+      inventory = variant.inventory
+      unless inventory && inventory.quantity > 0
+        return respond_to do |format|
+          format.html { redirect_back fallback_location: root_path, alert: 'Бараа дууссан байна' }
+          format.json { render json: { success: false, error: 'Out of stock' }, status: :unprocessable_entity }
+        end
+      end
+    end
+    
     # Parse service config if provided
     service_config = params[:cart_item][:service_config].present? ? JSON.parse(params[:cart_item][:service_config]) : nil
     
@@ -60,11 +71,27 @@ class CartItemsController < ApplicationController
         sellable_id: variant.sellable_id
       )
       
+      requested_quantity = (cart_item_params[:quantity] || 1).to_i
+      
+      # Check inventory for products
+      if variant.sellable.sellable_type == 'Product'
+        inventory = variant.inventory
+        new_quantity = @cart_item.new_record? ? requested_quantity : @cart_item.quantity + requested_quantity
+        
+        if inventory.nil? || inventory.quantity < new_quantity
+          available = inventory&.quantity || 0
+          return respond_to do |format|
+            format.html { redirect_back fallback_location: root_path, alert: "Үлдэгдэл хүрэлцэхгүй байна. (Үлдсэн: #{available})" }
+            format.json { render json: { success: false, error: 'Insufficient stock', available: available }, status: :unprocessable_entity }
+          end
+        end
+      end
+      
       if @cart_item.new_record?
-        @cart_item.quantity = cart_item_params[:quantity] || 1
+        @cart_item.quantity = requested_quantity
         @cart_item.configuration = service_config || cart_item_params[:configuration]
       else
-        @cart_item.quantity += (cart_item_params[:quantity] || 1).to_i
+        @cart_item.quantity += requested_quantity
         # Update configuration if provided
         @cart_item.configuration = service_config if service_config.present?
       end
@@ -86,6 +113,19 @@ class CartItemsController < ApplicationController
   def update
     quantity = params[:cart_item]&.dig(:quantity) || params.dig(:cart_item, :quantity) || params[:quantity]
     configuration = params[:cart_item]&.dig(:configuration) || params.dig(:cart_item, :configuration)
+    
+    # Check inventory for products when increasing quantity
+    if @cart_item.sellable.sellable_type == 'Product' && quantity.to_i > 0
+      inventory = @cart_item.sellable_variant&.inventory
+      
+      if inventory.nil? || inventory.quantity < quantity.to_i
+        available = inventory&.quantity || 0
+        return respond_to do |format|
+          format.html { redirect_to cart_path, alert: "Үлдэгдэл хүрэлцэхгүй байна. (Үлдсэн: #{available})" }
+          format.json { render json: { success: false, error: 'Insufficient stock', available: available }, status: :unprocessable_entity }
+        end
+      end
+    end
     
     if @cart_item.update(quantity: quantity, configuration: configuration)
       respond_to do |format|

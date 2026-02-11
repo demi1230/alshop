@@ -13,7 +13,7 @@ class OrdersController < ApplicationController
 
   def show
     authorize @order
-    @order_items = @order.order_items.includes(sellable_variant: { sellable: [:brand, product: :category] })
+    @order_items = @order.order_items.includes(:sellable, :sellable_variant)
     
     respond_to do |format|
       format.html
@@ -22,19 +22,35 @@ class OrdersController < ApplicationController
   end
 
   def create
-    # Get cart from session
-    cart = Cart.find_by(id: session[:cart_id])
+    # Get current cart (works for both logged in users and guests)
+    cart = current_cart
     
-    if cart.blank? || cart.cart_items.empty?
+    # Eager load cart items to avoid N+1 queries
+    cart_items = cart&.cart_items&.includes(sellable_variant: :sellable)
+    
+    if cart.blank? || cart_items.empty?
       redirect_to cart_path, alert: 'Сагс хоосон байна' and return
     end
 
-    # For now, just empty the cart
-    cart.cart_items.destroy_all
-    
-    respond_to do |format|
-      format.html { redirect_to root_path, notice: 'Захиалга амжилттай үүслээ' }
-      format.json { render json: { success: true }, status: :created }
+    # Convert cart to order
+    result = CartToOrderService.call(
+      cart: cart,
+      shipping_address_params: params[:shipping_address] || {}
+    )
+
+    if result.success?
+      # Clear cart from session (only for guest users)
+      session[:cart_id] = nil unless user_signed_in?
+      
+      respond_to do |format|
+        format.html { redirect_to order_path(result.order), notice: 'Захиалга амжилттай үүслээ' }
+        format.json { render json: { success: true, order_id: result.order.id }, status: :created }
+      end
+    else
+      respond_to do |format|
+        format.html { redirect_to cart_path, alert: result.error }
+        format.json { render json: { success: false, error: result.error }, status: :unprocessable_entity }
+      end
     end
   end
 

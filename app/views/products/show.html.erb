@@ -414,6 +414,12 @@ function initializeProductVariants() {
   });
   
   Object.values(attributeGroups).forEach(btn => btn.click());
+  
+  // If no variant options (default variant only), update stock display immediately
+  if (Object.keys(attributeGroups).length === 0 && allVariants.length > 0) {
+    updateStockDisplay(allVariants[0].stock);
+    updatePrice(allVariants[0].discounted_price, allVariants[0].price, allVariants[0].has_discount);
+  }
 }
 
 // Initialize on page load and Turbo navigation
